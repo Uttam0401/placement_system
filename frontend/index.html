@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Campus Placement Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--navy:#0d1b2a;--amber:#f59e0b;--teal:#14b8a6;--white:#fff}
+    body{font-family:'Space Grotesk',sans-serif;background:var(--navy);min-height:100vh;overflow-x:hidden}
+
+    /* hero */
+    .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+          padding:60px 24px;position:relative;text-align:center;overflow:hidden}
+    .hero::before{content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);
+                  width:800px;height:800px;background:radial-gradient(circle,rgba(245,158,11,.12) 0%,transparent 70%);
+                  border-radius:50%;pointer-events:none}
+
+    .logo-wrap{display:flex;align-items:center;gap:14px;margin-bottom:48px;justify-content:center}
+    .logo-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--amber),#d97706);
+               border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px}
+    .logo-text h1{font-family:'Sora',sans-serif;font-size:22px;font-weight:800;color:var(--white);line-height:1.2}
+    .logo-text span{font-size:12px;color:var(--amber);letter-spacing:2px;text-transform:uppercase}
+
+    .hero h2{font-family:'Sora',sans-serif;font-size:clamp(36px,6vw,64px);font-weight:800;
+             color:var(--white);line-height:1.1;margin-bottom:20px;max-width:800px}
+    .hero h2 em{color:var(--amber);font-style:normal}
+    .hero p{font-size:18px;color:rgba(255,255,255,.6);max-width:560px;margin:0 auto 48px;line-height:1.7}
+
+    .role-cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-bottom:56px}
+    .role-card{
+      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;padding:28px 32px;cursor:pointer;transition:all .25s;min-width:200px}
+    .role-card:hover{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.4);transform:translateY(-4px)}
+    .role-card .rc-icon{font-size:36px;margin-bottom:12px}
+    .role-card h3{font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--white);margin-bottom:6px}
+    .role-card p{font-size:13px;color:rgba(255,255,255,.5)}
+
+    .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+    .btn-cta{
+      padding:14px 32px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;
+      text-decoration:none;font-family:inherit;border:none;transition:all .25s}
+    .btn-primary{background:var(--amber);color:var(--navy)}
+    .btn-primary:hover{background:#d97706;transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,158,11,.4)}
+    .btn-outline{background:transparent;color:rgba(255,255,255,.8);border:2px solid rgba(255,255,255,.2)}
+    .btn-outline:hover{border-color:var(--amber);color:var(--amber)}
+
+    /* features strip */
+    .features{background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.08);
+               padding:40px 24px;display:flex;justify-content:center;gap:48px;flex-wrap:wrap}
+    .feat{display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.6);font-size:14px}
+    .feat span:first-child{font-size:22px}
+
+    @media(max-width:600px){.role-cards{flex-direction:column;align-items:center}.cta-row{flex-direction:column;align-items:center}}
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo-wrap">
+    <div class="logo-icon">🎓</div>
+    <div class="logo-text">
+      <h1>Campus Placement<br/>Management System</h1>
+      <span>by Uttam &nbsp;•&nbsp; Spring Boot + MySQL</span>
+    </div>
+  </div>
+
+  <h2>Your Career Starts <em>Here</em></h2>
+  <p>A unified platform connecting students, companies, and placement officers for seamless campus recruitment.</p>
+
+  <div class="role-cards">
+    <div class="role-card" onclick="location.href='auth/login.html?role=STUDENT'">
+      <div class="rc-icon">👨‍🎓</div>
+      <h3>Student</h3>
+      <p>Browse jobs, apply, track status</p>
+    </div>
+    <div class="role-card" onclick="location.href='auth/login.html?role=COMPANY'">
+      <div class="rc-icon">🏢</div>
+      <h3>Company</h3>
+      <p>Post jobs, review applicants</p>
+    </div>
+    <div class="role-card" onclick="location.href='auth/login.html?role=TPO'">
+      <div class="rc-icon">🎯</div>
+      <h3>TPO Admin</h3>
+      <p>Approve accounts, view analytics</p>
+    </div>
+  </div>
+
+  <div class="cta-row">
+    <a class="btn-cta btn-primary" href="auth/login.html">🔐 Sign In</a>
+    <a class="btn-cta btn-outline" href="auth/signup-student.html">📝 Register as Student</a>
+  </div>
+</div>
+
+<div class="features">
+  <div class="feat"><span>🔒</span><span>JWT Authentication</span></div>
+  <div class="feat"><span>📊</span><span>Real-time Analytics</span></div>
+  <div class="feat"><span>🤖</span><span>AI Chatbot Support</span></div>
+  <div class="feat"><span>📄</span><span>Resume Management</span></div>
+  <div class="feat"><span>⚡</span><span>Spring Boot Backend</span></div>
+</div>
+
+</body>
+</html>

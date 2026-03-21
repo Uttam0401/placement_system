@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>TPO Dashboard – CPMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="../assets/css/styles.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="sidebar-brand"><div class="brand-icon">🎯</div><h2>Campus Placement</h2><span>TPO Admin Panel</span></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Overview</div>
+            <div class="nav-item active" data-page="dashboard.html"><div class="nav-icon">📊</div><span>Dashboard</span></div>
+            <div class="nav-section">Manage</div>
+            <div class="nav-item" data-page="students.html"><div class="nav-icon">👨‍🎓</div><span>Students</span><span class="nav-badge" id="nb-students">0</span></div>
+            <div class="nav-item" data-page="companies.html"><div class="nav-icon">🏢</div><span>Companies</span><span class="nav-badge" id="nb-companies">0</span></div>
+            <div class="nav-item" data-page="jobs.html"><div class="nav-icon">💼</div><span>All Jobs</span></div>
+            <div class="nav-item" data-page="reports.html"><div class="nav-icon">📈</div><span>Reports</span></div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="s-avatar" id="s-avatar">T</div>
+                <div><div class="s-name" id="s-name">TPO Admin</div><div class="s-role" id="s-role">Placement Officer</div></div>
+                <button class="btn-logout">🚪</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-left"><h1>TPO Dashboard</h1><p id="topbar-sub">Placement management overview</p></div>
+            <div class="topbar-right">
+                <button class="topbar-btn" onclick="loadAll()">🔄</button>
+                <button class="topbar-btn" id="sidebar-toggle">☰</button>
+            </div>
+        </div>
+        <div class="page">
+
+            <!-- Stats -->
+            <div class="stats-grid" style="grid-template-columns:repeat(6,1fr);">
+                <div class="stat-card c-blue">  <div class="stat-icon">👨‍🎓</div><div class="stat-num" id="st-s">--</div><div class="stat-lbl">Students</div></div>
+                <div class="stat-card c-green"> <div class="stat-icon">🏆</div>  <div class="stat-num" id="st-p">--</div><div class="stat-lbl">Placed</div></div>
+                <div class="stat-card c-amber"> <div class="stat-icon">🏢</div>  <div class="stat-num" id="st-c">--</div><div class="stat-lbl">Companies</div></div>
+                <div class="stat-card c-purple"><div class="stat-icon">💼</div>  <div class="stat-num" id="st-j">--</div><div class="stat-lbl">Active Jobs</div></div>
+                <div class="stat-card c-red">   <div class="stat-icon">⏳</div>  <div class="stat-num" id="st-ps">--</div><div class="stat-lbl">Pending Students</div></div>
+                <div class="stat-card c-teal">  <div class="stat-icon">📋</div>  <div class="stat-num" id="st-a">--</div><div class="stat-lbl">Applications</div></div>
+            </div>
+
+            <!-- Charts -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;margin-bottom:24px;">
+                <div class="card">
+                    <div class="card-header"><div><h3>Placement Rate</h3></div></div>
+                    <div class="card-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                        <div style="position:relative;width:170px;height:170px;">
+                            <canvas id="plChart"></canvas>
+                            <div id="pl-pct" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:#0d1b2a;">--%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div><h3>App Status</h3></div></div>
+                    <div class="card-body" style="display:flex;align-items:center;justify-content:center;">
+                        <div style="width:190px;height:170px;"><canvas id="statusChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div><h3>Branch-wise Placed</h3></div></div>
+                    <div class="card-body"><div style="height:160px;"><canvas id="branchChart"></canvas></div></div>
+                </div>
+            </div>
+
+            <!-- Pending + Recent -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;">
+                <div class="card">
+                    <div class="card-header">
+                        <div><h3>⏳ Pending Approvals</h3><p>Accounts waiting for review</p></div>
+                        <a href="students.html" class="btn btn-outline btn-sm">View All →</a>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead><tr><th>Name</th><th>Type</th><th>Date</th><th>Action</th></tr></thead>
+                            <tbody id="pending-body"><tr><td colspan="4" style="padding:24px;text-align:center;color:#94a3b8;">Loading…</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div><h3>🏆 Recent Placements</h3><p>Latest placed students</p></div>
+                        <a href="reports.html" class="btn btn-outline btn-sm">Full Report →</a>
+                    </div>
+                    <div id="placed-list" style="padding:0 20px 20px;">
+                        <div style="padding:24px;text-align:center;color:#94a3b8;">Loading…</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script src="../assets/js/utils.js"></script>
+<script>
+    if (!Auth.require('TPO')) throw 0;
+    setupSidebar('Placement Officer');
+
+    let analytics = {};
+
+    async function loadAll() {
+      try {
+        analytics = await Api.get('/tpo/analytics');
+        fillStats();
+        renderCharts();
+        loadPending();
+        loadPlaced();
+      } catch(e) { Toast.show('Failed to load dashboard','error'); }
+    }
+
+    function fillStats() {
+      const a = analytics;
+      document.getElementById('st-s').textContent  = a.totalStudents     || 0;
+      document.getElementById('st-p').textContent  = a.placedStudents    || 0;
+      document.getElementById('st-c').textContent  = a.totalCompanies    || 0;
+      document.getElementById('st-j').textContent  = a.activeJobs        || 0;
+      document.getElementById('st-ps').textContent = a.pendingStudents   || 0;
+      document.getElementById('st-a').textContent  = a.totalApplications || 0;
+      document.getElementById('nb-students').textContent  = a.pendingStudents  || 0;
+      document.getElementById('nb-companies').textContent = a.pendingCompanies || 0;
+      const pct = a.totalStudents ? Math.round(a.placedStudents / a.totalStudents * 100) : 0;
+      document.getElementById('pl-pct').textContent = pct + '%';
+    }
+
+    function renderCharts() {
+      const a = analytics;
+      const pct = a.totalStudents ? Math.round(a.placedStudents / a.totalStudents * 100) : 0;
+
+      new Chart(document.getElementById('plChart').getContext('2d'), {
+        type:'doughnut',
+        data:{ datasets:[{ data:[pct, 100-pct], backgroundColor:['#22c55e','#f1f5f9'], borderWidth:0 }] },
+        options:{ cutout:'78%', plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+      });
+
+      const sd = a.applicationsByStatus || {};
+      new Chart(document.getElementById('statusChart').getContext('2d'), {
+        type:'doughnut',
+        data:{ labels: Object.keys(sd), datasets:[{ data: Object.values(sd),
+               backgroundColor:['#3b82f6','#f59e0b','#22c55e','#ef4444','#8b5cf6'], borderWidth:0 }] },
+        options:{ cutout:'60%', plugins:{ legend:{ position:'bottom', labels:{ font:{size:10}, padding:8 } } } }
+      });
+
+      const bd = a.placedByBranch || {};
+      new Chart(document.getElementById('branchChart').getContext('2d'), {
+        type:'bar',
+        data:{ labels: Object.keys(bd).length ? Object.keys(bd) : ['No data'],
+               datasets:[{ data: Object.values(bd).length ? Object.values(bd) : [0],
+                           backgroundColor:'#0d1b2a', borderRadius:6, borderWidth:0 }] },
+        options:{ plugins:{legend:{display:false}},
+                  scales:{ y:{beginAtZero:true,grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} } }
+      });
+    }
+
+    async function loadPending() {
+      try {
+        const [students, companies] = await Promise.all([
+          Api.get('/tpo/students?status=PENDING'),
+          Api.get('/tpo/companies?status=PENDING')
+        ]);
+        const all = [
+          ...students.map(s => ({...s, _type:'Student'})),
+          ...companies.map(c => ({...c, _type:'Company'}))
+        ].slice(0,8);
+        const tbody = document.getElementById('pending-body');
+        if (!all.length) { tbody.innerHTML = `<tr><td colspan="4" style="padding:28px;text-align:center;color:#94a3b8;">✅ No pending approvals</td></tr>`; return; }
+        tbody.innerHTML = all.map(x => `
+          <tr>
+            <td><div style="font-weight:600;font-size:13px;">${x.name}</div><div style="font-size:11px;color:#94a3b8;">${x.email||''}</div></td>
+            <td><span style="background:${x._type==='Student'?'#eff6ff':'#f5f3ff'};color:${x._type==='Student'?'#2563eb':'#7c3aed'};padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;">${x._type==='Student'?'👨‍🎓':'🏢'} ${x._type}</span></td>
+            <td style="font-size:12px;color:#94a3b8;">${UI.date(x.createdAt)}</td>
+            <td>
+              <div style="display:flex;gap:5px;">
+                <button class="btn btn-success btn-sm" onclick="approve('${x._type.toLowerCase()}',${x.id})">✅</button>
+                <button class="btn btn-danger  btn-sm" onclick="reject('${x._type.toLowerCase()}',${x.id})">✕</button>
+              </div>
+            </td>
+          </tr>`).join('');
+      } catch(e) {}
+    }
+
+    async function loadPlaced() {
+      try {
+        const apps = await Api.get('/tpo/applications');
+        const placed = apps.filter(a => a.status==='PLACED').slice(0,6);
+        const el = document.getElementById('placed-list');
+        if (!placed.length) { el.innerHTML = `<div style="padding:24px;text-align:center;color:#94a3b8;">📭 No placements yet</div>`; return; }
+        el.innerHTML = placed.map(a => `
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9;">
+            <div style="width:34px;height:34px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">${UI.initials(a.student?.name)}</div>
+            <div style="flex:1;">
+              <div style="font-weight:600;font-size:13px;">${a.student?.name||'—'}</div>
+              <div style="font-size:12px;color:#94a3b8;">${a.job?.role} @ ${a.job?.company?.name}</div>
+            </div>
+            <span style="background:#f5f3ff;color:#7c3aed;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">🏆 Placed</span>
+          </div>`).join('');
+      } catch(e) {}
+    }
+
+    async function approve(type, id) {
+      try { await Api.put(`/tpo/${type}s/${id}/approve`); Toast.show(`${type} approved! ✅`,'success'); loadAll(); }
+      catch(e) { Toast.show(e.message,'error'); }
+    }
+
+    async function reject(type, id) {
+      if (!confirm('Reject this account?')) return;
+      try { await Api.put(`/tpo/${type}s/${id}/reject`); Toast.show('Account rejected','warning'); loadAll(); }
+      catch(e) { Toast.show(e.message,'error'); }
+    }
+
+    loadAll();
+</script>
+</body>
+</html>

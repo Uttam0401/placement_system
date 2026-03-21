@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Students – TPO Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="../assets/css/styles.css"/>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="sidebar-brand"><div class="brand-icon">🎯</div><h2>Campus Placement</h2><span>TPO Admin Panel</span></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Overview</div>
+            <div class="nav-item" data-page="dashboard.html"><div class="nav-icon">📊</div><span>Dashboard</span></div>
+            <div class="nav-section">Manage</div>
+            <div class="nav-item active" data-page="students.html"><div class="nav-icon">👨‍🎓</div><span>Students</span></div>
+            <div class="nav-item" data-page="companies.html"><div class="nav-icon">🏢</div><span>Companies</span></div>
+            <div class="nav-item" data-page="jobs.html"><div class="nav-icon">💼</div><span>All Jobs</span></div>
+            <div class="nav-item" data-page="reports.html"><div class="nav-icon">📈</div><span>Reports</span></div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="s-avatar" id="s-avatar">T</div>
+                <div><div class="s-name" id="s-name">TPO Admin</div><div class="s-role" id="s-role">Placement Officer</div></div>
+                <button class="btn-logout">🚪</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-left"><h1>Student Management</h1><p id="topbar-sub">Approve and manage student registrations</p></div>
+            <div class="topbar-right"><button class="topbar-btn" id="sidebar-toggle">☰</button></div>
+        </div>
+        <div class="page">
+
+            <div class="filter-bar">
+                <div class="search-wrap">
+                    <span class="si">🔍</span>
+                    <input class="form-control" id="q" placeholder="Search by name, email, branch…" oninput="filterStudents()"/>
+                </div>
+                <div style="display:flex;gap:6px;" id="status-tabs">
+                    <button class="btn btn-primary btn-sm" data-s="" onclick="setStatus('')">All</button>
+                    <button class="btn btn-outline btn-sm" data-s="PENDING"  onclick="setStatus('PENDING')">⏳ Pending</button>
+                    <button class="btn btn-outline btn-sm" data-s="APPROVED" onclick="setStatus('APPROVED')">✅ Approved</button>
+                    <button class="btn btn-outline btn-sm" data-s="REJECTED" onclick="setStatus('REJECTED')">❌ Rejected</button>
+                </div>
+                <span id="count-lbl" style="margin-left:auto;font-size:13px;color:#64748b;"></span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div><h3>All Students</h3><p id="tbl-sub">Loading…</p></div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-success btn-sm" onclick="bulkApprove()">✅ Approve Selected</button>
+                        <button class="btn btn-danger  btn-sm" onclick="bulkReject()">❌ Reject Selected</button>
+                    </div>
+                </div>
+                <div class="tbl-wrap">
+                    <table class="tbl">
+                        <thead>
+                        <tr>
+                            <th><input type="checkbox" id="sel-all" onclick="toggleAll()"/></th>
+                            <th>Student</th><th>Branch</th><th>CGPA</th><th>Grad Year</th><th>Registered</th><th>Status</th><th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="students-body"><tr><td colspan="8" style="padding:40px;text-align:center;color:#94a3b8;">Loading…</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="../assets/js/utils.js"></script>
+<script>
+    if (!Auth.require('TPO')) throw 0;
+    setupSidebar('Placement Officer');
+
+    let all = [], curStatus = '';
+
+    async function load() {
+      try { all = await Api.get('/tpo/students'); filterStudents(); }
+      catch(e) { Toast.show('Failed to load students','error'); }
+    }
+
+    function setStatus(s) {
+      curStatus = s;
+      document.querySelectorAll('#status-tabs button').forEach(b =>
+        b.className = b.dataset.s === s ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm');
+      filterStudents();
+    }
+
+    function filterStudents() {
+      const q = document.getElementById('q').value.toLowerCase();
+      let f = curStatus ? all.filter(x => x.approvalStatus === curStatus) : all;
+      if (q) f = f.filter(x => x.name?.toLowerCase().includes(q) || x.email?.toLowerCase().includes(q) || x.branch?.toLowerCase().includes(q));
+      document.getElementById('count-lbl').textContent = `${f.length} student${f.length!==1?'s':''}`;
+      document.getElementById('tbl-sub').textContent   = `${f.length} students found`;
+      render(f);
+    }
+
+    function render(students) {
+      const tbody = document.getElementById('students-body');
+      if (!students.length) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('No students found','📭','Try a different filter')}</td></tr>`; return; }
+      tbody.innerHTML = students.map(s => `
+        <tr>
+          <td><input type="checkbox" class="row-check" data-id="${s.id}"/></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:9px;">
+              <div style="width:34px;height:34px;background:linear-gradient(135deg,#0d1b2a,#243b55);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#f59e0b;flex-shrink:0;">${UI.initials(s.name)}</div>
+              <div><div style="font-weight:600;font-size:13px;">${s.name}</div><div style="font-size:11px;color:#94a3b8;">${s.email}</div></div>
+            </div>
+          </td>
+          <td><span style="background:#f1f5f9;padding:3px 9px;border-radius:6px;font-size:12px;font-weight:600;">${s.branch||'—'}</span></td>
+          <td><strong style="color:${(s.cgpa||0)>=7.5?'#22c55e':'#f59e0b'}">${s.cgpa||'—'}</strong></td>
+          <td style="font-size:13px;color:#64748b;">${s.graduationYear||'—'}</td>
+          <td style="font-size:12px;color:#94a3b8;">${UI.date(s.createdAt)}</td>
+          <td>${UI.badge(s.approvalStatus)}</td>
+          <td>
+            <div style="display:flex;gap:5px;">
+              ${s.approvalStatus!=='APPROVED'?`<button class="btn btn-success btn-sm" onclick="approve(${s.id})">✅</button>`:''}
+              ${s.approvalStatus!=='REJECTED'?`<button class="btn btn-danger  btn-sm" onclick="reject(${s.id})">✕</button>`:''}
+              <button class="btn btn-danger btn-sm" onclick="del(${s.id},'${s.name}')">🗑</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    }
+
+    async function approve(id) { try { await Api.put(`/tpo/students/${id}/approve`); Toast.show('Approved ✅','success'); load(); } catch(e) { Toast.show(e.message,'error'); } }
+    async function reject(id)  { if (!confirm('Reject?')) return; try { await Api.put(`/tpo/students/${id}/reject`); Toast.show('Rejected','warning'); load(); } catch(e) { Toast.show(e.message,'error'); } }
+    async function del(id,n)   { if (!confirm(`Delete "${n}"?`)) return; try { await Api.delete(`/tpo/students/${id}`); Toast.show('Deleted','success'); load(); } catch(e) { Toast.show(e.message,'error'); } }
+    function toggleAll() { const c=document.getElementById('sel-all').checked; document.querySelectorAll('.row-check').forEach(x=>x.checked=c); }
+    async function bulkApprove() {
+      const ids=[...document.querySelectorAll('.row-check:checked')].map(x=>+x.dataset.id);
+      if (!ids.length) { Toast.show('Nothing selected','warning'); return; }
+      Loader.show(); await Promise.allSettled(ids.map(id=>Api.put(`/tpo/students/${id}/approve`))); Loader.hide();
+      Toast.show(`${ids.length} approved ✅`,'success'); load();
+    }
+    async function bulkReject() {
+      const ids=[...document.querySelectorAll('.row-check:checked')].map(x=>+x.dataset.id);
+      if (!ids.length) { Toast.show('Nothing selected','warning'); return; }
+      if (!confirm(`Reject ${ids.length} student(s)?`)) return;
+      Loader.show(); await Promise.allSettled(ids.map(id=>Api.put(`/tpo/students/${id}/reject`))); Loader.hide();
+      Toast.show(`${ids.length} rejected`,'warning'); load();
+    }
+    load();
+</script>
+</body>
+</html>

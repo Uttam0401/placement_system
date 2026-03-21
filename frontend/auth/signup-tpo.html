@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>TPO Registration – CPMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{--navy:#0d1b2a;--amber:#f59e0b;--border:#e2e8f0;--gray-100:#f1f5f9;--gray-400:#94a3b8;--text:#1e293b;--teal:#14b8a6}
+        body{font-family:'Space Grotesk',sans-serif;background:var(--gray-100);min-height:100vh;
+             display:flex;align-items:center;justify-content:center;padding:32px 16px}
+        .card{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:520px;box-shadow:0 8px 40px rgba(0,0,0,.1)}
+        .card-header{text-align:center;margin-bottom:32px}
+        .icon{width:60px;height:60px;background:linear-gradient(135deg,var(--teal),#0d9488);border-radius:16px;
+              display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px}
+        h2{font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px}
+        .sub{font-size:14px;color:var(--gray-400)}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+        .form-group{margin-bottom:16px}
+        .form-label{display:block;margin-bottom:7px;font-size:12px;font-weight:600;color:var(--navy)}
+        .form-control{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;
+                      font-size:14px;color:var(--text);background:#fff;outline:none;font-family:inherit;transition:all .2s}
+        .form-control:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(13,27,42,.07)}
+        .form-control::placeholder{color:var(--gray-400)}
+        .submit-btn{width:100%;padding:13px;background:var(--teal);color:#fff;border:none;border-radius:10px;
+                    font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:8px}
+        .submit-btn:hover{background:#0d9488;transform:translateY(-1px)}
+        .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+        .switch{text-align:center;margin-top:20px;font-size:14px;color:var(--gray-400)}
+        .switch a{color:var(--navy);font-weight:600}
+        .msg{padding:12px 16px;border-radius:9px;font-size:13px;font-weight:500;margin-bottom:16px;display:none}
+        .msg.error  {background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+        .msg.success{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+        @media(max-width:520px){.form-row{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="card-header">
+        <div class="icon">🎯</div>
+        <h2>TPO Registration</h2>
+        <p class="sub">Create a Training & Placement Officer account</p>
+    </div>
+
+    <div class="msg error"   id="err-msg"></div>
+    <div class="msg success" id="ok-msg"></div>
+
+    <form id="reg-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input class="form-control" id="name" placeholder="Dr. Uttam Kumar" required/>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input class="form-control" id="phone" type="tel" placeholder="9876543210"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input class="form-control" id="email" type="email" placeholder="tpo@college.edu" required/>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Designation</label>
+            <input class="form-control" id="designation" placeholder="Training & Placement Officer"/>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Password *</label>
+            <input class="form-control" id="password" type="password" placeholder="Minimum 6 characters" required/>
+        </div>
+        <button type="submit" class="submit-btn" id="submit-btn">🎯 Create TPO Account</button>
+    </form>
+
+    <div class="switch">Already have an account? <a href="login.html?role=TPO">Sign in →</a></div>
+</div>
+
+<script>
+    const API = 'http://localhost:8080/api';
+    document.getElementById('reg-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true; btn.textContent = 'Creating account…';
+      document.getElementById('err-msg').style.display = 'none';
+      document.getElementById('ok-msg').style.display  = 'none';
+      try {
+        const res = await fetch(`${API}/auth/register/tpo`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            name:        document.getElementById('name').value,
+            email:       document.getElementById('email').value,
+            password:    document.getElementById('password').value,
+            phone:       document.getElementById('phone').value,
+            designation: document.getElementById('designation').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Registration failed');
+        const ok = document.getElementById('ok-msg');
+        ok.textContent = '✅ TPO account created! You can now login.';
+        ok.style.display = 'block'; e.target.reset();
+      } catch (err) {
+        const el = document.getElementById('err-msg');
+        el.textContent = '❌ ' + err.message; el.style.display = 'block';
+      } finally { btn.disabled = false; btn.textContent = '🎯 Create TPO Account'; }
+    });
+</script>
+</body>
+</html>

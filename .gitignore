@@ -1,0 +1,45 @@
+# ============================================================
+# Campus Placement Management System — .gitignore
+# ============================================================
+
+# Maven
+backend/target/
+backend/*.jar
+backend/*.war
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Environment / Secrets
+backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-prod.properties
+*.env
+.env
+
+# Logs
+*.log
+logs/
+
+# Uploads (generated at runtime)
+backend/uploads/
+uploads/
+
+# Node (if using npm serve for frontend)
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+Desktop.ini
+
+# Project exclude paths
+/target/

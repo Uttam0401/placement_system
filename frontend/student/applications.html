@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>My Applications – CPMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="../assets/css/styles.css"/>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="sidebar-brand"><div class="brand-icon">🎓</div><h2>Campus Placement</h2><span>Student Portal</span></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main</div>
+            <div class="nav-item" data-page="dashboard.html"><div class="nav-icon">📊</div><span>Dashboard</span></div>
+            <div class="nav-item" data-page="jobs.html"><div class="nav-icon">💼</div><span>Browse Jobs</span></div>
+            <div class="nav-item active" data-page="applications.html"><div class="nav-icon">📋</div><span>My Applications</span></div>
+            <div class="nav-section">Account</div>
+            <div class="nav-item" data-page="profile.html"><div class="nav-icon">👤</div><span>My Profile</span></div>
+            <div class="nav-item" data-page="chatbot.html"><div class="nav-icon">🤖</div><span>AI Assistant</span></div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="s-avatar" id="s-avatar">S</div>
+                <div><div class="s-name" id="s-name">Student</div><div class="s-role" id="s-role">Student</div></div>
+                <button class="btn-logout">🚪</button>
+            </div>
+        </div>
+    </aside>
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-left"><h1>My Applications</h1><p id="topbar-sub">Track all your job applications</p></div>
+            <div class="topbar-right"><button class="topbar-btn" id="sidebar-toggle">☰</button></div>
+        </div>
+        <div class="page">
+
+            <!-- Status filters -->
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;" id="status-chips">
+                <button class="btn btn-primary btn-sm" data-s="" onclick="setFilter('')">All</button>
+                <button class="btn btn-outline btn-sm" data-s="APPLIED"       onclick="setFilter('APPLIED')">📋 Applied</button>
+                <button class="btn btn-outline btn-sm" data-s="UNDER_REVIEW"  onclick="setFilter('UNDER_REVIEW')">🔍 Under Review</button>
+                <button class="btn btn-outline btn-sm" data-s="SHORTLISTED"   onclick="setFilter('SHORTLISTED')">🌟 Shortlisted</button>
+                <button class="btn btn-outline btn-sm" data-s="REJECTED"      onclick="setFilter('REJECTED')">❌ Rejected</button>
+                <button class="btn btn-outline btn-sm" data-s="PLACED"        onclick="setFilter('PLACED')">🏆 Placed</button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div><h3>Applications Tracker</h3><p id="app-count">Loading…</p></div>
+                </div>
+                <div class="tbl-wrap">
+                    <table class="tbl">
+                        <thead><tr><th>#</th><th>Company</th><th>Role</th><th>CTC</th><th>Location</th><th>Applied On</th><th>Status</th><th>Feedback</th></tr></thead>
+                        <tbody id="apps-body"><tr><td colspan="8" style="padding:40px;text-align:center;color:#94a3b8;">Loading…</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Shortlisted highlight -->
+            <div id="shortlisted-section" style="display:none;margin-top:24px;">
+                <div class="card">
+                    <div class="card-header"><div><h3>🌟 Shortlisted Applications</h3><p>Congratulations! These companies have shortlisted you</p></div></div>
+                    <div class="card-body" id="shortlisted-cards"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- Chatbot -->
+<div class="chatbot-btn" id="chatbot-btn">🤖</div>
+<div class="chatbot-win" id="chatbot-win">
+    <div class="chat-hdr"><div class="chat-avatar">🤖</div><div><h4>Placement Assistant</h4><p>Ask me anything</p></div></div>
+    <div class="chat-msgs" id="chat-msgs"></div>
+    <div class="chat-input-row"><input id="chat-input" placeholder="Type your question…"/><button class="chat-send" id="chat-send">➤</button></div>
+</div>
+
+<script src="../assets/js/utils.js"></script>
+<script>
+    if (!Auth.require('STUDENT')) throw 0;
+    setupSidebar('Student');
+    setupChatbot();
+
+    let all = [], curFilter = '';
+
+    async function load() {
+      try {
+        all = await Api.get('/student/applications');
+        renderApps(all);
+        renderShortlisted();
+      } catch(e) { Toast.show('Failed to load applications', 'error'); }
+    }
+
+    function setFilter(s) {
+      curFilter = s;
+      document.querySelectorAll('#status-chips button').forEach(b =>
+        b.className = b.dataset.s === s ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm');
+      renderApps(s ? all.filter(a => a.status === s) : all);
+    }
+
+    function renderApps(apps) {
+      document.getElementById('app-count').textContent = `${apps.length} application${apps.length!==1?'s':''}`;
+      const tbody = document.getElementById('apps-body');
+      if (!apps.length) {
+        tbody.innerHTML = `<tr><td colspan="8">${UI.empty('No applications','📭', curFilter?'No applications with this status':'Apply for jobs to see them here')}</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = apps.map((a,i) => `
+        <tr>
+          <td style="font-size:12px;color:#94a3b8;font-weight:600;">${String(i+1).padStart(2,'0')}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:9px;">
+              <div style="width:34px;height:34px;background:#0d1b2a;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#f59e0b;flex-shrink:0;">${UI.logoLetter(a.job?.company?.name)}</div>
+              <div><div style="font-weight:600;font-size:13px;">${a.job?.company?.name||'—'}</div>
+                   <div style="font-size:11px;color:#94a3b8;">${a.job?.company?.industry||''}</div></div>
+            </div>
+          </td>
+          <td style="font-weight:500;">${a.job?.role||'—'}</td>
+          <td><span class="ctc-tag" style="font-size:12px;">${a.job?.ctc||'N/A'}</span></td>
+          <td style="font-size:13px;color:#64748b;">📍 ${a.job?.location||'—'}</td>
+          <td style="font-size:13px;color:#64748b;">${UI.date(a.appliedAt)}</td>
+          <td>${UI.badge(a.status)}</td>
+          <td style="font-size:12px;color:#64748b;max-width:140px;">${a.feedback?`<span title="${a.feedback}" style="cursor:help;">${UI.trunc(a.feedback,40)}</span>`:'<span style="color:#cbd5e1;">—</span>'}</td>
+        </tr>`).join('');
+    }
+
+    function renderShortlisted() {
+      const s = all.filter(a => a.status==='SHORTLISTED'||a.status==='PLACED');
+      document.getElementById('shortlisted-section').style.display = s.length ? 'block' : 'none';
+      document.getElementById('shortlisted-cards').innerHTML = s.map(a => `
+        <div style="display:flex;align-items:center;gap:16px;padding:16px;background:${a.status==='PLACED'?'#f5f3ff':'#f0fdf4'};
+             border:1px solid ${a.status==='PLACED'?'#ddd6fe':'#bbf7d0'};border-radius:12px;margin-bottom:10px;">
+          <div style="font-size:32px;">${a.status==='PLACED'?'🏆':'🌟'}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:15px;">${a.job?.role}</div>
+            <div style="font-size:13px;color:#64748b;">${a.job?.company?.name}</div>
+            ${a.feedback?`<div style="font-size:12px;color:#7c3aed;margin-top:6px;background:rgba(124,58,237,.08);padding:7px 12px;border-radius:8px;">💬 ${a.feedback}</div>`:''}
+          </div>
+          <div>${UI.badge(a.status)}</div>
+        </div>`).join('');
+    }
+
+    load();
+</script>
+</body>
+</html>

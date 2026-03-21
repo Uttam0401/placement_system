@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Applicants – CPMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="../assets/css/styles.css"/>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="sidebar-brand"><div class="brand-icon">🏢</div><h2>Campus Placement</h2><span>Company Portal</span></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main</div>
+            <div class="nav-item" data-page="dashboard.html"><div class="nav-icon">📊</div><span>Dashboard</span></div>
+            <div class="nav-item" data-page="post-job.html"><div class="nav-icon">➕</div><span>Post Job</span></div>
+            <div class="nav-item active" data-page="applicants.html"><div class="nav-icon">👥</div><span>Applicants</span></div>
+            <div class="nav-item" data-page="shortlist.html"><div class="nav-icon">🌟</div><span>Shortlist</span></div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="s-avatar" id="s-avatar">C</div>
+                <div><div class="s-name" id="s-name">Company</div><div class="s-role" id="s-role">HR Manager</div></div>
+                <button class="btn-logout">🚪</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-left"><h1>Applicants</h1><p id="topbar-sub">Review and manage job applicants</p></div>
+            <div class="topbar-right"><button class="topbar-btn" id="sidebar-toggle">☰</button></div>
+        </div>
+        <div class="page">
+
+            <!-- Filters -->
+            <div class="card" style="padding:20px;margin-bottom:22px;">
+                <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
+                    <div style="flex:1;min-width:200px;">
+                        <label class="form-label" style="margin-bottom:6px;">Select Job</label>
+                        <select class="form-control" id="job-sel" onchange="loadApplicants()">
+                            <option value="">-- Select a Job --</option>
+                        </select>
+                    </div>
+                    <div style="min-width:130px;">
+                        <label class="form-label" style="margin-bottom:6px;">Min CGPA</label>
+                        <input class="form-control" id="f-cgpa" type="number" placeholder="7.0" min="0" max="10" step="0.1" oninput="applyFilters()"/>
+                    </div>
+                    <div style="min-width:130px;">
+                        <label class="form-label" style="margin-bottom:6px;">Branch</label>
+                        <select class="form-control" id="f-branch" onchange="applyFilters()">
+                            <option value="">All Branches</option>
+                            <option>CSE</option><option>ECE</option><option>IT</option>
+                            <option>ME</option><option>CE</option><option>EEE</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="clearFilters()">✕ Clear</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div><h3 id="app-heading">Applicants</h3><p id="app-sub">Select a job above</p></div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-success btn-sm" id="bulk-short-btn" style="display:none;" onclick="bulkAction('SHORTLISTED')">✅ Shortlist Selected</button>
+                        <button class="btn btn-danger  btn-sm" id="bulk-rej-btn"   style="display:none;" onclick="bulkAction('REJECTED')">❌ Reject Selected</button>
+                    </div>
+                </div>
+                <div class="tbl-wrap">
+                    <table class="tbl">
+                        <thead>
+                        <tr>
+                            <th><input type="checkbox" id="sel-all" onclick="toggleAll()"/></th>
+                            <th>Applicant</th><th>Branch</th><th>CGPA</th><th>Skills</th>
+                            <th>Applied On</th><th>Status</th><th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="apps-body">
+                        <tr><td colspan="8" style="padding:40px;text-align:center;color:#94a3b8;">Select a job to view applicants</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Feedback modal -->
+<div class="modal-overlay" id="fb-modal">
+    <div class="modal" style="max-width:460px;">
+        <div class="modal-hdr">
+            <h2 class="modal-title" id="fb-title">Update Status</h2>
+            <button class="modal-close" onclick="Modal.close('fb-modal')">✕</button>
+        </div>
+        <div class="form-group"><label class="form-label">New Status</label>
+            <select class="form-control" id="new-status">
+                <option value="UNDER_REVIEW">🔍 Under Review</option>
+                <option value="SHORTLISTED">🌟 Shortlisted</option>
+                <option value="REJECTED">❌ Rejected</option>
+                <option value="PLACED">🏆 Placed</option>
+            </select></div>
+        <div class="form-group"><label class="form-label">Feedback for student (optional)</label>
+            <textarea class="form-control" id="fb-text" rows="3" placeholder="Add comments for the student…"></textarea></div>
+        <div style="display:flex;gap:12px;">
+            <button class="btn btn-primary" style="flex:1;" onclick="submitUpdate()">💾 Update</button>
+            <button class="btn btn-outline" onclick="Modal.close('fb-modal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script src="../assets/js/utils.js"></script>
+<script>
+    if (!Auth.require('COMPANY')) throw 0;
+    setupSidebar('HR Manager');
+
+    let allApps = [], selAppId = null;
+
+    async function loadJobs() {
+      try {
+        const jobs = await Api.get('/company/jobs');
+        const sel = document.getElementById('job-sel');
+        sel.innerHTML = '<option value="">-- Select a Job --</option>' +
+          jobs.map(j => `<option value="${j.id}">${j.role} (${j.status})</option>`).join('');
+        const saved = sessionStorage.getItem('viewJobId');
+        if (saved) { sel.value = saved; sessionStorage.removeItem('viewJobId'); loadApplicants(); }
+      } catch(e) { Toast.show('Failed to load jobs', 'error'); }
+    }
+
+    async function loadApplicants() {
+      const jobId = document.getElementById('job-sel').value;
+      if (!jobId) return;
+      try {
+        allApps = await Api.get(`/company/jobs/${jobId}/applicants`);
+        const role = document.getElementById('job-sel').selectedOptions[0].text;
+        document.getElementById('app-heading').textContent = `Applicants for: ${role}`;
+        document.getElementById('app-sub').textContent     = `${allApps.length} total applicants`;
+        document.getElementById('bulk-short-btn').style.display = 'inline-flex';
+        document.getElementById('bulk-rej-btn').style.display   = 'inline-flex';
+        applyFilters();
+      } catch(e) { Toast.show(e.message, 'error'); }
+    }
+
+    function applyFilters() {
+      const mc = parseFloat(document.getElementById('f-cgpa').value)   || 0;
+      const br = document.getElementById('f-branch').value;
+      const f  = allApps.filter(a => (!mc || (a.student?.cgpa||0) >= mc) && (!br || a.student?.branch === br));
+      document.getElementById('app-sub').textContent = `Showing ${f.length} of ${allApps.length}`;
+      renderApps(f);
+    }
+
+    function clearFilters() {
+      document.getElementById('f-cgpa').value   = '';
+      document.getElementById('f-branch').value = '';
+      renderApps(allApps);
+    }
+
+    function renderApps(apps) {
+      const tbody = document.getElementById('apps-body');
+      if (!apps.length) { tbody.innerHTML = `<tr><td colspan="8">${UI.empty('No applicants','📭','Try adjusting filters')}</td></tr>`; return; }
+      tbody.innerHTML = apps.map(a => {
+        const skills = (a.student?.skills||'').split(',').slice(0,3);
+        return `
+        <tr>
+          <td><input type="checkbox" class="row-check" data-id="${a.id}"/></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:9px;">
+              <div style="width:34px;height:34px;background:linear-gradient(135deg,#0d1b2a,#243b55);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#f59e0b;flex-shrink:0;">${UI.initials(a.student?.name)}</div>
+              <div><div style="font-weight:600;font-size:13px;">${a.student?.name||'—'}</div>
+                   <div style="font-size:11px;color:#94a3b8;">${a.student?.email||''}</div></div>
+            </div>
+          </td>
+          <td><span style="background:#f1f5f9;padding:3px 9px;border-radius:6px;font-size:12px;font-weight:600;">${a.student?.branch||'—'}</span></td>
+          <td><strong style="font-size:14px;color:${(a.student?.cgpa||0)>=7.5?'#22c55e':'#f59e0b'}">${a.student?.cgpa||'—'}</strong></td>
+          <td><div style="display:flex;flex-wrap:wrap;gap:4px;">${skills.map(s=>`<span class="skill-tag">${s.trim()}</span>`).join('')}</div></td>
+          <td style="font-size:12px;color:#94a3b8;">${UI.date(a.appliedAt)}</td>
+          <td>${UI.badge(a.status)}</td>
+          <td>
+            <div style="display:flex;gap:5px;">
+              <button class="btn btn-success btn-sm" onclick="quick(${a.id},'SHORTLISTED')">⭐</button>
+              <button class="btn btn-danger  btn-sm" onclick="quick(${a.id},'REJECTED')">✕</button>
+              <button class="btn btn-outline btn-sm" onclick="openFb(${a.id},'${a.student?.name||''}')">✏️</button>
+              ${a.student?.resumeUrl?`<a href="http://localhost:8080${a.student.resumeUrl}" target="_blank" class="btn btn-outline btn-sm">📄</a>`:''}
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function openFb(id, name) {
+      selAppId = id;
+      document.getElementById('fb-title').textContent = `Update: ${name}`;
+      document.getElementById('fb-text').value = '';
+      Modal.open('fb-modal');
+    }
+
+    async function submitUpdate() {
+      try {
+        await Api.put(`/company/applications/${selAppId}/status`, { status: document.getElementById('new-status').value, feedback: document.getElementById('fb-text').value });
+        Toast.show('Status updated ✅', 'success');
+        Modal.close('fb-modal');
+        loadApplicants();
+      } catch(e) { Toast.show(e.message,'error'); }
+    }
+
+    async function quick(id, status) {
+      try { await Api.put(`/company/applications/${id}/status`, { status }); Toast.show(`${status} ✅`,'success'); loadApplicants(); }
+      catch(e) { Toast.show(e.message,'error'); }
+    }
+
+    function toggleAll() {
+      const c = document.getElementById('sel-all').checked;
+      document.querySelectorAll('.row-check').forEach(x => x.checked = c);
+    }
+
+    async function bulkAction(status) {
+      const ids = [...document.querySelectorAll('.row-check:checked')].map(x=>+x.dataset.id);
+      if (!ids.length) { Toast.show('No applicants selected','warning'); return; }
+      if (!confirm(`${status} ${ids.length} applicant(s)?`)) return;
+      Loader.show();
+      await Promise.allSettled(ids.map(id => Api.put(`/company/applications/${id}/status`, { status })));
+      Loader.hide();
+      Toast.show(`${ids.length} applicant(s) updated ✅`,'success');
+      loadApplicants();
+    }
+
+    loadJobs();
+</script>
+</body>
+</html>

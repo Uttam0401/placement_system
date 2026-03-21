@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Browse Jobs – CPMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="../assets/css/styles.css"/>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="sidebar-brand"><div class="brand-icon">🎓</div><h2>Campus Placement</h2><span>Student Portal</span></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main</div>
+            <div class="nav-item" data-page="dashboard.html"><div class="nav-icon">📊</div><span>Dashboard</span></div>
+            <div class="nav-item active" data-page="jobs.html"><div class="nav-icon">💼</div><span>Browse Jobs</span></div>
+            <div class="nav-item" data-page="applications.html"><div class="nav-icon">📋</div><span>My Applications</span></div>
+            <div class="nav-section">Account</div>
+            <div class="nav-item" data-page="profile.html"><div class="nav-icon">👤</div><span>My Profile</span></div>
+            <div class="nav-item" data-page="chatbot.html"><div class="nav-icon">🤖</div><span>AI Assistant</span></div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="s-avatar" id="s-avatar">S</div>
+                <div><div class="s-name" id="s-name">Student</div><div class="s-role" id="s-role">Student</div></div>
+                <button class="btn-logout">🚪</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-left"><h1>Browse Jobs</h1><p id="topbar-sub">All available campus opportunities</p></div>
+            <div class="topbar-right"><button class="topbar-btn" id="sidebar-toggle">☰</button></div>
+        </div>
+        <div class="page">
+
+            <!-- Filter bar -->
+            <div class="filter-bar">
+                <div class="search-wrap">
+                    <span class="si">🔍</span>
+                    <input class="form-control" id="q" placeholder="Search roles, companies, skills…"/>
+                </div>
+                <select class="form-control" id="f-branch" style="width:150px;">
+                    <option value="">All Branches</option>
+                    <option>CSE</option><option>ECE</option><option>IT</option>
+                    <option>ME</option><option>CE</option><option>EEE</option>
+                </select>
+                <select class="form-control" id="f-type" style="width:150px;">
+                    <option value="">All Types</option>
+                    <option>Full-Time</option><option>Internship</option><option>Part-Time</option>
+                </select>
+                <button class="btn btn-outline btn-sm" onclick="clearFilters()">✕ Clear</button>
+                <span id="count-lbl" style="margin-left:auto;font-size:13px;color:#64748b;"></span>
+            </div>
+
+            <div class="jobs-grid" id="jobs-grid">
+                <div class="empty"><span class="ei">⏳</span><h3>Loading jobs…</h3></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Job detail + apply modal -->
+<div class="modal-overlay" id="job-modal">
+    <div class="modal" style="max-width:640px;">
+        <div class="modal-hdr">
+            <h2 class="modal-title" id="m-role">Job Details</h2>
+            <button class="modal-close" onclick="Modal.close('job-modal')">✕</button>
+        </div>
+        <div id="m-body"></div>
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+            <div class="form-group" id="cl-group">
+                <label class="form-label">Cover Letter (optional)</label>
+                <textarea class="form-control" id="cover-letter" rows="3" placeholder="Why are you a great fit for this role?"></textarea>
+            </div>
+            <div style="display:flex;gap:12px;">
+                <button class="btn btn-amber" id="apply-btn" style="flex:1;" onclick="doApply()">🚀 Apply Now</button>
+                <button class="btn btn-outline" onclick="Modal.close('job-modal')">Cancel</button>
+            </div>
+            <div id="apply-msg" style="margin-top:12px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Chatbot -->
+<div class="chatbot-btn" id="chatbot-btn">🤖</div>
+<div class="chatbot-win" id="chatbot-win">
+    <div class="chat-hdr"><div class="chat-avatar">🤖</div><div><h4>Placement Assistant</h4><p>Ask me anything</p></div></div>
+    <div class="chat-msgs" id="chat-msgs"></div>
+    <div class="chat-input-row"><input id="chat-input" placeholder="Type your question…"/><button class="chat-send" id="chat-send">➤</button></div>
+</div>
+
+<script src="../assets/js/utils.js"></script>
+<script>
+    if (!Auth.require('STUDENT')) throw 0;
+    setupSidebar('Student');
+    setupChatbot();
+
+    let all = [], applied = new Set(), selId = null;
+
+    async function load() {
+      try {
+        [all] = await Promise.all([Api.get('/student/jobs')]);
+        const apps = await Api.get('/student/applications');
+        applied = new Set(apps.map(a => a.job?.id));
+        render(all);
+      } catch(e) { Toast.show('Failed to load jobs', 'error'); }
+    }
+
+    function filter() {
+      const q = document.getElementById('q').value.toLowerCase();
+      const br = document.getElementById('f-branch').value;
+      const ty = document.getElementById('f-type').value;
+      return all.filter(j => {
+        const mq = !q || j.role?.toLowerCase().includes(q) || j.company?.name?.toLowerCase().includes(q) || j.requiredSkills?.toLowerCase().includes(q);
+        const mb = !br || !j.eligibleBranches || j.eligibleBranches.includes(br);
+        const mt = !ty || j.jobType === ty;
+        return mq && mb && mt;
+      });
+    }
+
+    function render(jobs) {
+      document.getElementById('count-lbl').textContent = `${jobs.length} job${jobs.length!==1?'s':''}`;
+      const g = document.getElementById('jobs-grid');
+      if (!jobs.length) { g.innerHTML = UI.empty('No jobs found','🔍','Try adjusting your filters'); return; }
+      g.innerHTML = jobs.map(j => {
+        const app = applied.has(j.id);
+        return `
+        <div class="job-card" onclick="openModal(${j.id})">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <div class="co-logo">${UI.logoLetter(j.company?.name)}</div>
+              <div><div style="font-weight:700;font-size:15px;color:#0d1b2a;">${j.role}</div>
+                   <div style="font-size:13px;color:#64748b;">🏢 ${j.company?.name||'Company'}</div></div>
+            </div>
+            ${app ? UI.badge('applied') : UI.badge('active')}
+          </div>
+          <div class="meta-tags">
+            ${j.location?`<span class="meta-tag">📍 ${j.location}</span>`:''}
+            ${j.jobType?`<span class="meta-tag">⏱ ${j.jobType}</span>`:''}
+            ${j.minimumCgpa?`<span class="meta-tag">📊 CGPA ${j.minimumCgpa}+</span>`:''}
+            ${j.openings?`<span class="meta-tag">👥 ${j.openings} seats</span>`:''}
+          </div>
+          <p style="font-size:13px;color:#64748b;line-height:1.5;">${UI.trunc(j.description,100)}</p>
+          ${j.requiredSkills?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
+            ${j.requiredSkills.split(',').slice(0,4).map(s=>`<span class="skill-tag">${s.trim()}</span>`).join('')}
+          </div>`:''}
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+            <span class="ctc-tag">💰 ${j.ctc||'As per norms'}</span>
+            <span style="font-size:12px;color:#94a3b8;">📅 ${j.applicationDeadline?UI.date(j.applicationDeadline):'Open'}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function openModal(id) {
+      selId = id;
+      const j = all.find(x=>x.id===id); if (!j) return;
+      document.getElementById('m-role').textContent = j.role;
+      let eligHtml = '';
+      try {
+        const e = await Api.get(`/student/jobs/${id}/eligibility`);
+        eligHtml = e.eligible
+          ? '<div class="alert alert-success">✅ You are eligible for this job!</div>'
+          : `<div class="alert alert-warning">⚠️ Not eligible: ${(e.reasons||[]).join(', ')}</div>`;
+      } catch {}
+
+      const app = applied.has(id);
+      document.getElementById('m-body').innerHTML = `
+        ${eligHtml}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          <div><strong>🏢 Company</strong><p style="color:#64748b;margin-top:4px;">${j.company?.name}</p></div>
+          <div><strong>💰 CTC</strong><p style="color:#64748b;margin-top:4px;">${j.ctc||'Not specified'}</p></div>
+          <div><strong>📍 Location</strong><p style="color:#64748b;margin-top:4px;">${j.location||'—'}</p></div>
+          <div><strong>⏱ Type</strong><p style="color:#64748b;margin-top:4px;">${j.jobType||'—'}</p></div>
+          <div><strong>📊 Min CGPA</strong><p style="color:#64748b;margin-top:4px;">${j.minimumCgpa||'None'}</p></div>
+          <div><strong>👥 Openings</strong><p style="color:#64748b;margin-top:4px;">${j.openings||'—'}</p></div>
+          <div><strong>🎓 Branches</strong><p style="color:#64748b;margin-top:4px;">${j.eligibleBranches||'All'}</p></div>
+          <div><strong>📅 Deadline</strong><p style="color:#64748b;margin-top:4px;">${j.applicationDeadline?UI.date(j.applicationDeadline):'Open'}</p></div>
+        </div>
+        ${j.description?`<div><strong>📝 Description</strong><p style="color:#64748b;margin-top:8px;line-height:1.7;">${j.description}</p></div>`:''}
+        ${j.requiredSkills?`<div style="margin-top:14px;"><strong>🛠 Skills</strong>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+            ${j.requiredSkills.split(',').map(s=>`<span class="skill-tag" style="padding:5px 12px;border-radius:20px;">${s.trim()}</span>`).join('')}
+          </div></div>`:''}`;
+
+      const btn = document.getElementById('apply-btn');
+      document.getElementById('apply-msg').innerHTML = '';
+      if (app) {
+        btn.disabled = true; btn.textContent = '✓ Already Applied';
+        document.getElementById('cl-group').style.display = 'none';
+      } else {
+        btn.disabled = false; btn.textContent = '🚀 Apply Now';
+        document.getElementById('cl-group').style.display = 'block';
+        document.getElementById('cover-letter').value = '';
+      }
+      Modal.open('job-modal');
+    }
+
+    async function doApply() {
+      const btn = document.getElementById('apply-btn');
+      btn.disabled = true; btn.textContent = 'Applying…';
+      try {
+        await Api.post('/student/apply', { jobId: selId, coverLetter: document.getElementById('cover-letter').value });
+        Toast.show('Application submitted! 🎉', 'success');
+        applied.add(selId); btn.textContent = '✓ Applied!';
+        document.getElementById('apply-msg').innerHTML = '<div class="alert alert-success">✅ Application submitted successfully!</div>';
+        document.getElementById('cl-group').style.display = 'none';
+        render(filter());
+      } catch(e) {
+        Toast.show(e.message, 'error');
+        document.getElementById('apply-msg').innerHTML = `<div class="alert alert-danger">❌ ${e.message}</div>`;
+        btn.disabled = false; btn.textContent = '🚀 Apply Now';
+      }
+    }
+
+    function clearFilters() {
+      document.getElementById('q').value = '';
+      document.getElementById('f-branch').value = '';
+      document.getElementById('f-type').value = '';
+      render(all);
+    }
+
+    ['q','f-branch','f-type'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => render(filter()));
+      document.getElementById(id)?.addEventListener('change', () => render(filter()));
+    });
+
+    load();
+</script>
+</body>
+</html>

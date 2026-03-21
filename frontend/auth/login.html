@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Login – CPMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{--navy:#0d1b2a;--navy-mid:#1b2d42;--amber:#f59e0b;--amber-dark:#d97706;
+              --teal:#14b8a6;--border:#e2e8f0;--gray-100:#f1f5f9;--gray-400:#94a3b8;--text:#1e293b}
+        body{font-family:'Space Grotesk',sans-serif;min-height:100vh;display:flex}
+
+        /* left panel */
+        .left{flex:1;background:var(--navy);display:flex;flex-direction:column;
+              justify-content:center;padding:60px 64px;position:relative;overflow:hidden}
+        .left::before{content:'';position:absolute;top:-160px;right:-80px;width:500px;height:500px;
+                      background:radial-gradient(circle,rgba(245,158,11,.14) 0%,transparent 70%);
+                      border-radius:50%;pointer-events:none}
+        .brand{margin-bottom:56px;position:relative;z-index:1}
+        .brand-icon{width:50px;height:50px;background:linear-gradient(135deg,var(--amber),var(--amber-dark));
+                    border-radius:13px;display:flex;align-items:center;justify-content:center;
+                    font-size:22px;margin-bottom:14px}
+        .brand h1{font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:4px}
+        .brand p{color:rgba(255,255,255,.45);font-size:13px}
+        .hero-text{position:relative;z-index:1}
+        .hero-text h2{font-family:'Sora',sans-serif;font-size:44px;font-weight:800;color:#fff;
+                      line-height:1.1;margin-bottom:18px}
+        .hero-text h2 span{color:var(--amber)}
+        .hero-text p{font-size:16px;color:rgba(255,255,255,.55);line-height:1.7;max-width:440px}
+        .hero-chips{display:flex;gap:14px;margin-top:40px;flex-wrap:wrap;position:relative;z-index:1}
+        .chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);
+              border:1px solid rgba(255,255,255,.12);padding:10px 16px;border-radius:10px;
+              color:rgba(255,255,255,.75);font-size:13px;font-weight:500}
+        .chip-icon{width:28px;height:28px;background:var(--amber-dark);border-radius:7px;
+                   display:flex;align-items:center;justify-content:center;font-size:13px}
+
+        /* right panel */
+        .right{width:500px;flex-shrink:0;background:#f8fafc;display:flex;align-items:center;
+               justify-content:center;padding:40px}
+        .auth-box{width:100%;max-width:420px}
+        .auth-box h3{font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px}
+        .auth-box .sub{font-size:14px;color:var(--gray-400);margin-bottom:28px}
+
+        /* role tabs */
+        .role-tabs{display:flex;gap:5px;background:#e2e8f0;padding:4px;border-radius:10px;margin-bottom:26px}
+        .role-tab{flex:1;padding:9px;border:none;background:none;border-radius:8px;font-size:13px;
+                  font-weight:600;color:var(--gray-400);cursor:pointer;font-family:inherit;transition:all .2s}
+        .role-tab.active{background:var(--navy);color:#fff;box-shadow:0 2px 8px rgba(13,27,42,.25)}
+
+        /* form */
+        .form-group{margin-bottom:16px}
+        .form-label{display:block;margin-bottom:7px;font-size:12px;font-weight:600;color:var(--navy);letter-spacing:.3px}
+        .form-control{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;
+                      font-size:14px;color:var(--navy);background:#fff;outline:none;font-family:inherit;
+                      transition:all .2s}
+        .form-control:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(13,27,42,.07)}
+        .pw-wrap{position:relative}
+        .pw-wrap input{padding-right:42px}
+        .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                   background:none;border:none;cursor:pointer;font-size:16px;color:var(--gray-400)}
+        .submit-btn{width:100%;padding:13px;background:var(--navy);color:#fff;border:none;
+                    border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;
+                    transition:all .2s;margin-top:6px}
+        .submit-btn:hover{background:#1b2d42;transform:translateY(-1px);box-shadow:0 4px 16px rgba(13,27,42,.3)}
+        .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+        .switch-link{text-align:center;margin-top:20px;font-size:14px;color:var(--gray-400)}
+        .switch-link a{color:var(--navy);font-weight:600}
+        .msg{padding:11px 16px;border-radius:9px;font-size:13px;font-weight:500;margin-bottom:16px;
+             display:flex;align-items:center;gap:8px}
+        .msg.error  {background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;display:none}
+        .msg.success{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;display:none}
+
+        /* toast */
+        .toast-wrap{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:10px}
+        .toast{background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;
+               animation:si .3s ease;border-left:4px solid var(--amber);min-width:260px}
+        .toast.error{border-left-color:#ef4444}
+        @keyframes si{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+        @media(max-width:900px){.left{display:none}.right{width:100%}}
+    </style>
+</head>
+<body>
+
+<div class="left">
+    <div class="brand">
+        <div class="brand-icon">🎓</div>
+        <h1>Campus Placement<br/>Management System</h1>
+        <p>by Uttam &nbsp;•&nbsp; Spring Boot + MySQL</p>
+    </div>
+    <div class="hero-text">
+        <h2>Connecting <span>Talent</span><br/>With Opportunity</h2>
+        <p>A complete placement ecosystem — students, companies, and placement officers in one platform.</p>
+        <div class="hero-chips">
+            <div class="chip"><div class="chip-icon">👨‍🎓</div>Student Portal</div>
+            <div class="chip"><div class="chip-icon">🏢</div>Company HR</div>
+            <div class="chip"><div class="chip-icon">🎯</div>TPO Admin</div>
+        </div>
+    </div>
+</div>
+
+<div class="right">
+    <div class="auth-box">
+        <h3>Welcome Back</h3>
+        <p class="sub">Sign in to your placement dashboard</p>
+
+        <div class="role-tabs">
+            <button class="role-tab active" data-role="STUDENT">👨‍🎓 Student</button>
+            <button class="role-tab" data-role="COMPANY">🏢 Company</button>
+            <button class="role-tab" data-role="TPO">🎯 TPO</button>
+        </div>
+
+        <div class="msg error"   id="err-msg">❌ <span id="err-text"></span></div>
+        <div class="msg success" id="ok-msg">✅ <span id="ok-text"></span></div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="email" placeholder="your@email.com" required/>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="pw-wrap">
+                    <input type="password" class="form-control" id="password" placeholder="Enter password" required/>
+                    <button type="button" class="pw-toggle" id="pw-toggle">👁️</button>
+                </div>
+            </div>
+            <button type="submit" class="submit-btn" id="submit-btn">🔐 Sign In</button>
+        </form>
+
+        <div class="switch-link">
+            Don't have an account?
+            <a href="#" id="signup-link">Register here →</a>
+        </div>
+    </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+    const API = 'http://localhost:8080/api';
+    let role = 'STUDENT';
+
+    // Pre-select role from URL
+    const urlRole = new URLSearchParams(location.search).get('role');
+    if (urlRole) { role = urlRole; document.querySelector(`[data-role="${role}"]`)?.classList.add('active');
+      document.querySelectorAll('.role-tab').forEach(t => t.classList.toggle('active', t.dataset.role === role)); }
+
+    // Role tabs
+    document.querySelectorAll('.role-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        role = tab.dataset.role;
+        clearMsgs();
+      });
+    });
+
+    // Toggle password
+    document.getElementById('pw-toggle').addEventListener('click', () => {
+      const pw = document.getElementById('password');
+      pw.type = pw.type === 'password' ? 'text' : 'password';
+    });
+
+    // Signup link
+    document.getElementById('signup-link').addEventListener('click', e => {
+      e.preventDefault();
+      const links = { STUDENT:'signup-student.html', COMPANY:'signup-company.html', TPO:'signup-tpo.html' };
+      location.href = links[role];
+    });
+
+    // Login
+    document.getElementById('login-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true; btn.textContent = 'Signing in…';
+      clearMsgs();
+
+      try {
+        const res = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: document.getElementById('email').value,
+                                 password: document.getElementById('password').value, role })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+
+        ['token','role','userId','name','email'].forEach(k => localStorage.setItem('ps_' + k, data[k] || ''));
+        showOk('Login successful! Redirecting…');
+
+        setTimeout(() => {
+          const routes = { STUDENT:'../student/dashboard.html', COMPANY:'../company/dashboard.html', TPO:'../tpo/dashboard.html' };
+          location.href = routes[data.role];
+        }, 900);
+      } catch (err) {
+        showErr(err.message);
+        btn.disabled = false; btn.textContent = '🔐 Sign In';
+      }
+    });
+
+    function showErr(m) { document.getElementById('err-text').textContent = m; document.getElementById('err-msg').style.display = 'flex'; }
+    function showOk(m)  { document.getElementById('ok-text').textContent  = m; document.getElementById('ok-msg').style.display  = 'flex'; }
+    function clearMsgs(){ document.getElementById('err-msg').style.display = 'none'; document.getElementById('ok-msg').style.display = 'none'; }
+
+    // Redirect if already logged in
+    const tok = localStorage.getItem('ps_token');
+    const lr  = localStorage.getItem('ps_role');
+    if (tok && lr) {
+      const r = { STUDENT:'../student/dashboard.html', COMPANY:'../company/dashboard.html', TPO:'../tpo/dashboard.html' };
+      if (r[lr]) location.href = r[lr];
+    }
+</script>
+</body>
+</html>

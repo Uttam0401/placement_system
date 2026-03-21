@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Post Job – CPMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="../assets/css/styles.css"/>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="sidebar-brand"><div class="brand-icon">🏢</div><h2>Campus Placement</h2><span>Company Portal</span></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main</div>
+            <div class="nav-item" data-page="dashboard.html"><div class="nav-icon">📊</div><span>Dashboard</span></div>
+            <div class="nav-item active" data-page="post-job.html"><div class="nav-icon">➕</div><span>Post Job</span></div>
+            <div class="nav-item" data-page="applicants.html"><div class="nav-icon">👥</div><span>Applicants</span></div>
+            <div class="nav-item" data-page="shortlist.html"><div class="nav-icon">🌟</div><span>Shortlist</span></div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="s-avatar" id="s-avatar">C</div>
+                <div><div class="s-name" id="s-name">Company</div><div class="s-role" id="s-role">HR Manager</div></div>
+                <button class="btn-logout">🚪</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-left"><h1>Post a Job</h1><p id="topbar-sub">Create a new campus job opening</p></div>
+            <div class="topbar-right"><button class="topbar-btn" id="sidebar-toggle">☰</button></div>
+        </div>
+        <div class="page">
+
+            <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;">
+
+                <!-- Form -->
+                <div class="card">
+                    <div class="card-header"><div><h3>Job Details</h3><p>Fill in the information for the new opening</p></div></div>
+                    <div class="card-body">
+                        <div class="alert alert-info" id="not-approved" style="display:none;">
+                            ⚠️ Your company must be <strong>approved by TPO</strong> before posting jobs. Please wait for approval.
+                        </div>
+                        <div id="msg" style="display:none;" class="alert"></div>
+
+                        <form id="job-form">
+                            <div class="form-row">
+                                <div class="form-group"><label class="form-label">Job Role / Title *</label>
+                                    <input class="form-control" id="j-role" placeholder="e.g. Software Engineer" required/></div>
+                                <div class="form-group"><label class="form-label">CTC / Stipend</label>
+                                    <input class="form-control" id="j-ctc" placeholder="e.g. 12 LPA or 40000/month"/></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label class="form-label">Job Type</label>
+                                    <select class="form-control" id="j-type">
+                                        <option>Full-Time</option><option>Internship</option><option>Part-Time</option>
+                                    </select></div>
+                                <div class="form-group"><label class="form-label">Location</label>
+                                    <input class="form-control" id="j-location" placeholder="e.g. Bangalore or PAN India"/></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label class="form-label">Minimum CGPA</label>
+                                    <input class="form-control" id="j-cgpa" type="number" placeholder="7.5" min="0" max="10" step="0.1"/></div>
+                                <div class="form-group"><label class="form-label">Number of Openings</label>
+                                    <input class="form-control" id="j-openings" type="number" placeholder="10" min="1"/></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label class="form-label">Application Deadline</label>
+                                    <input class="form-control" id="j-deadline" type="date"/></div>
+                                <div class="form-group"><label class="form-label">Status</label>
+                                    <select class="form-control" id="j-status">
+                                        <option value="ACTIVE">🟢 Active – Accept applications now</option>
+                                        <option value="DRAFT">📝 Draft – Save without publishing</option>
+                                        <option value="CLOSED">🔴 Closed</option>
+                                    </select></div>
+                            </div>
+                            <div class="form-group"><label class="form-label">Eligible Branches <span style="color:#94a3b8;font-weight:400;">(comma-separated, leave blank for all)</span></label>
+                                <input class="form-control" id="j-branches" placeholder="CSE,ECE,IT"/></div>
+                            <div class="form-group"><label class="form-label">Required Skills <span style="color:#94a3b8;font-weight:400;">(comma-separated)</span></label>
+                                <input class="form-control" id="j-skills" placeholder="Java, Spring Boot, SQL, REST APIs"/></div>
+                            <div class="form-group"><label class="form-label">Job Description</label>
+                                <textarea class="form-control" id="j-desc" rows="5" placeholder="Describe the role, responsibilities, requirements, and benefits…"></textarea></div>
+                            <div style="display:flex;gap:12px;">
+                                <button type="submit" class="btn btn-amber" id="submit-btn" style="flex:1;">🚀 Post Job</button>
+                                <button type="reset" class="btn btn-outline">↩ Reset</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tips -->
+                <div>
+                    <div class="card">
+                        <div class="card-header"><div><h3>💡 Tips</h3></div></div>
+                        <div class="card-body" style="font-size:13px;color:#64748b;line-height:1.7;">
+                            <p style="margin-bottom:10px;">✅ <strong>Active</strong> jobs are visible to all eligible students immediately.</p>
+                            <p style="margin-bottom:10px;">📝 Use <strong>Draft</strong> to save before publishing.</p>
+                            <p style="margin-bottom:10px;">🎓 Set <strong>Min CGPA</strong> to auto-filter eligible students.</p>
+                            <p style="margin-bottom:10px;">🌿 Set <strong>Eligible Branches</strong> to target specific departments.</p>
+                            <p>📅 Set a <strong>Deadline</strong> to stop applications automatically.</p>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:18px;">
+                        <div class="card-header"><div><h3>📋 Your Jobs</h3></div></div>
+                        <div id="my-jobs-list" style="padding:0 16px 16px;font-size:13px;color:#64748b;">Loading…</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script src="../assets/js/utils.js"></script>
+<script>
+    if (!Auth.require('COMPANY')) throw 0;
+    setupSidebar('HR Manager');
+
+    async function checkApproval() {
+      try {
+        const p = await Api.get('/company/profile');
+        if (p.approvalStatus !== 'APPROVED') {
+          document.getElementById('not-approved').style.display = 'flex';
+          document.getElementById('submit-btn').disabled = true;
+        }
+      } catch(e) {}
+    }
+
+    async function loadMyJobs() {
+      try {
+        const jobs = await Api.get('/company/jobs');
+        const el = document.getElementById('my-jobs-list');
+        if (!jobs.length) { el.innerHTML = '<p>No jobs posted yet.</p>'; return; }
+        el.innerHTML = jobs.slice(0,5).map(j => `
+          <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-weight:600;color:#0d1b2a;font-size:13px;">${j.role}</div>
+              <div style="font-size:11px;color:#94a3b8;">${j.jobType||''} • ${(j.applications||[]).length} applicants</div>
+            </div>
+            ${UI.badge(j.status)}
+          </div>`).join('') + (jobs.length>5?`<p style="margin-top:10px;"><a href="applicants.html" style="color:#0d1b2a;font-weight:600;">View all ${jobs.length} jobs →</a></p>`:'');
+      } catch(e) {}
+    }
+
+    document.getElementById('job-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true; btn.textContent = 'Posting…';
+      const msg = document.getElementById('msg');
+      msg.style.display = 'none';
+
+      try {
+        await Api.post('/company/jobs', {
+          role:                document.getElementById('j-role').value,
+          ctc:                 document.getElementById('j-ctc').value,
+          jobType:             document.getElementById('j-type').value,
+          location:            document.getElementById('j-location').value,
+          minimumCgpa:         parseFloat(document.getElementById('j-cgpa').value) || null,
+          openings:            parseInt(document.getElementById('j-openings').value) || null,
+          applicationDeadline: document.getElementById('j-deadline').value || null,
+          status:              document.getElementById('j-status').value,
+          eligibleBranches:    document.getElementById('j-branches').value,
+          requiredSkills:      document.getElementById('j-skills').value,
+          description:         document.getElementById('j-desc').value
+        });
+        Toast.show('Job posted successfully! 🚀', 'success');
+        msg.className = 'alert alert-success'; msg.textContent = '✅ Job posted! Students can now view and apply.'; msg.style.display='flex';
+        document.getElementById('job-form').reset();
+        loadMyJobs();
+      } catch(err) {
+        Toast.show(err.message, 'error');
+        msg.className = 'alert alert-danger'; msg.textContent = '❌ ' + err.message; msg.style.display='flex';
+      } finally { btn.disabled = false; btn.textContent = '🚀 Post Job'; }
+    });
+
+    checkApproval();
+    loadMyJobs();
+</script>
+</body>
+</html>

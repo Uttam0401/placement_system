@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Student Dashboard – CPMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="../assets/css/styles.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🎓</div>
+            <h2>Campus Placement</h2><span>Student Portal</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main</div>
+            <div class="nav-item active" data-page="dashboard.html"><div class="nav-icon">📊</div><span>Dashboard</span></div>
+            <div class="nav-item" data-page="jobs.html"><div class="nav-icon">💼</div><span>Browse Jobs</span></div>
+            <div class="nav-item" data-page="applications.html"><div class="nav-icon">📋</div><span>My Applications</span></div>
+            <div class="nav-section">Account</div>
+            <div class="nav-item" data-page="profile.html"><div class="nav-icon">👤</div><span>My Profile</span></div>
+            <div class="nav-item" data-page="chatbot.html"><div class="nav-icon">🤖</div><span>AI Assistant</span></div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="s-avatar" id="s-avatar">S</div>
+                <div><div class="s-name" id="s-name">Student</div><div class="s-role" id="s-role">Student</div></div>
+                <button class="btn-logout" title="Logout">🚪</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <h1>Dashboard</h1>
+                <p id="topbar-sub">Your placement overview</p>
+            </div>
+            <div class="topbar-right">
+                <button class="topbar-btn" id="sidebar-toggle">☰</button>
+            </div>
+        </div>
+
+        <div class="page">
+
+            <div class="alert alert-warning" id="pending-alert" style="display:none;">
+                ⏳ <strong>Pending Approval:</strong> Your account is awaiting TPO approval. You can explore but cannot apply until approved.
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card c-blue"><div class="stat-icon">💼</div>
+                    <div class="stat-num" id="st-jobs">--</div><div class="stat-lbl">Active Jobs</div></div>
+                <div class="stat-card c-green"><div class="stat-icon">✅</div>
+                    <div class="stat-num" id="st-eligible">--</div><div class="stat-lbl">Eligible Jobs</div></div>
+                <div class="stat-card c-amber"><div class="stat-icon">📋</div>
+                    <div class="stat-num" id="st-applied">--</div><div class="stat-lbl">Applied</div></div>
+                <div class="stat-card c-purple"><div class="stat-icon">🌟</div>
+                    <div class="stat-num" id="st-shortlisted">--</div><div class="stat-lbl">Shortlisted</div></div>
+            </div>
+
+            <!-- Charts + Recent -->
+            <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:24px;margin-bottom:28px;">
+                <div class="card">
+                    <div class="card-header"><div><h3>Application Status</h3><p>Breakdown of your applications</p></div></div>
+                    <div class="card-body" style="display:flex;align-items:center;justify-content:center;">
+                        <div style="width:220px;height:220px;"><canvas id="statusChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div><h3>Recent Applications</h3><p>Your latest job applications</p></div>
+                        <a href="applications.html" class="btn btn-outline btn-sm">View All →</a>
+                    </div>
+                    <div class="card-body p0 tbl-wrap">
+                        <table class="tbl">
+                            <thead><tr><th>Company & Role</th><th>Applied On</th><th>Status</th></tr></thead>
+                            <tbody id="recent-apps"><tr><td colspan="3" style="padding:32px;text-align:center;color:#94a3b8;">Loading…</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Completion -->
+            <div class="card">
+                <div class="card-header">
+                    <div><h3>Profile Completion</h3><p>Complete your profile for better job matches</p></div>
+                    <a href="profile.html" class="btn btn-amber btn-sm">✏️ Edit Profile</a>
+                </div>
+                <div class="card-body" id="profile-tips"></div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- Chatbot -->
+<div class="chatbot-btn" id="chatbot-btn">🤖</div>
+<div class="chatbot-win" id="chatbot-win">
+    <div class="chat-hdr"><div class="chat-avatar">🤖</div>
+        <div><h4>Placement Assistant</h4><p>Ask me anything</p></div></div>
+    <div class="chat-msgs" id="chat-msgs"></div>
+    <div class="chat-input-row">
+        <input id="chat-input" placeholder="Type your question…"/>
+        <button class="chat-send" id="chat-send">➤</button>
+    </div>
+</div>
+
+<script src="../assets/js/utils.js"></script>
+<script>
+    if (!Auth.require('STUDENT')) throw 0;
+    setupSidebar('Student');
+    setupChatbot();
+
+    async function load() {
+      try {
+        const stats = await Api.get('/student/dashboard');
+        document.getElementById('st-jobs').textContent       = stats.totalJobs    || 0;
+        document.getElementById('st-eligible').textContent   = stats.eligibleJobs || 0;
+        document.getElementById('st-applied').textContent    = stats.appliedJobs  || 0;
+        document.getElementById('st-shortlisted').textContent= stats.shortlisted  || 0;
+        if (stats.approvalStatus !== 'APPROVED') document.getElementById('pending-alert').style.display = 'flex';
+        renderChart(stats);
+        renderTips(stats);
+      } catch (e) { Toast.show('Failed to load dashboard', 'error'); }
+    }
+
+    async function loadApps() {
+      try {
+        const apps = await Api.get('/student/applications');
+        const tbody = document.getElementById('recent-apps');
+        if (!apps.length) { tbody.innerHTML = `<tr><td colspan="3" style="padding:32px;text-align:center;color:#94a3b8;">No applications yet. <a href="jobs.html" style="color:#0d1b2a;font-weight:600;">Browse jobs →</a></td></tr>`; return; }
+        tbody.innerHTML = apps.slice(0,5).map(a => `
+          <tr>
+            <td><div style="font-weight:600;font-size:13px;">${a.job?.role||'-'}</div>
+                <div style="font-size:11px;color:#94a3b8;">${a.job?.company?.name||'-'}</div></td>
+            <td style="font-size:13px;color:#64748b;">${UI.date(a.appliedAt)}</td>
+            <td>${UI.badge(a.status)}</td>
+          </tr>`).join('');
+      } catch(e) {}
+    }
+
+    function renderChart(s) {
+      const underReview = Math.max(0, (s.appliedJobs||0) - (s.shortlisted||0) - (s.rejected||0));
+      new Chart(document.getElementById('statusChart').getContext('2d'), {
+        type:'doughnut',
+        data:{ labels:['Under Review','Shortlisted','Rejected'],
+               datasets:[{ data:[underReview, s.shortlisted||0, s.rejected||0],
+                           backgroundColor:['#f59e0b','#22c55e','#ef4444'], borderWidth:0, hoverOffset:4 }] },
+        options:{ cutout:'70%', plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, padding:14 } } } }
+      });
+    }
+
+    function renderTips(s) {
+      const tips = [
+        { lbl:'Profile name set',     done: true,            icon:'👤', href:'profile.html' },
+        { lbl:'CGPA added',           done: s.eligibleJobs>0, icon:'📊', href:'profile.html' },
+        { lbl:'Resume uploaded',      done: false,            icon:'📄', href:'profile.html' },
+        { lbl:'Skills added',         done: s.eligibleJobs>0, icon:'💡', href:'profile.html' },
+        { lbl:'First job applied',    done: s.appliedJobs>0,  icon:'✅', href:'jobs.html'    },
+      ];
+      const pct = Math.round(tips.filter(t=>t.done).length / tips.length * 100);
+      document.getElementById('profile-tips').innerHTML = `
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:14px;font-weight:600;color:#0d1b2a;">${pct}% complete</span>
+            <span style="font-size:13px;color:#94a3b8;">${tips.filter(t=>t.done).length}/${tips.length} steps</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+        ${tips.map(t => `
+          <a href="${t.href}" style="display:flex;align-items:center;gap:12px;padding:13px 16px;
+             background:${t.done?'#f0fdf4':'#f8fafc'};border:1px solid ${t.done?'#bbf7d0':'#e2e8f0'};
+             border-radius:10px;text-decoration:none;transition:all .2s;"
+             onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
+            <span style="font-size:20px;">${t.icon}</span>
+            <span style="font-size:13px;font-weight:500;color:${t.done?'#15803d':'#64748b'};">${t.lbl}</span>
+            <span style="margin-left:auto;">${t.done?'✅':'○'}</span>
+          </a>`).join('')}
+        </div>`;
+    }
+
+    load(); loadApps();
+</script>
+</body>
+</html>

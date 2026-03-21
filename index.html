@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Campus Placement Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0d1b2a; --navy-mid: #1b2d42; --amber: #f59e0b;
+      --amber-dark: #d97706; --teal: #14b8a6; --white: #fff;
+      --gray-100: #f1f5f9; --gray-400: #94a3b8;
+      --border: #e2e8f0; --radius: 12px; --radius-lg: 20px;
+    }
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--navy);
+      min-height: 100vh; display: flex; overflow: hidden;
+    }
+
+    /* ===== LEFT PANEL ===== */
+    .left-panel {
+      flex: 1; padding: 60px 64px;
+      display: flex; flex-direction: column; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+
+    .left-panel::before {
+      content: '';
+      position: absolute; top: -200px; right: -100px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%);
+      border-radius: 50%; pointer-events: none;
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute; bottom: -150px; left: -80px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(20,184,166,0.12) 0%, transparent 70%);
+      border-radius: 50%; pointer-events: none;
+    }
+
+    .brand { margin-bottom: 56px; position: relative; z-index: 1; }
+
+    .brand-logo {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; margin-bottom: 16px;
+    }
+
+    .brand h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 28px; font-weight: 800;
+      color: var(--white); line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .brand p { color: rgba(255,255,255,0.5); font-size: 14px; }
+
+    .hero-content { position: relative; z-index: 1; margin-bottom: 56px; }
+
+    .hero-content h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: 48px; font-weight: 800; line-height: 1.1;
+      color: var(--white); margin-bottom: 20px;
+    }
+
+    .hero-content h2 span { color: var(--amber); }
+
+    .hero-content p {
+      font-size: 17px; color: rgba(255,255,255,0.6);
+      line-height: 1.7; max-width: 480px;
+    }
+
+    .features { position: relative; z-index: 1; display: flex; gap: 24px; }
+
+    .feature-chip {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 12px 18px; border-radius: var(--radius);
+      color: rgba(255,255,255,0.8); font-size: 13px; font-weight: 500;
+    }
+
+    .feature-chip .icon {
+      width: 30px; height: 30px;
+      background: var(--amber-dark);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+
+    /* ===== RIGHT PANEL ===== */
+    .right-panel {
+      width: 520px; flex-shrink: 0;
+      background: #f8fafc;
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px;
+    }
+
+    .auth-card {
+      width: 100%; max-width: 440px;
+    }
+
+    .auth-header { margin-bottom: 32px; }
+    .auth-header h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 26px; font-weight: 800;
+      color: var(--navy); margin-bottom: 6px;
+    }
+    .auth-header p { font-size: 14px; color: var(--gray-400); }
+
+    /* Role tabs */
+    .role-tabs {
+      display: flex; gap: 6px;
+      background: #e2e8f0; padding: 4px;
+      border-radius: 10px; margin-bottom: 28px;
+    }
+
+    .role-tab {
+      flex: 1; padding: 9px;
+      border: none; background: none;
+      border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      color: var(--gray-400); cursor: pointer;
+      transition: all 0.2s; font-family: inherit;
+    }
+
+    .role-tab.active {
+      background: var(--navy); color: var(--white);
+      box-shadow: 0 2px 8px rgba(13,27,42,0.25);
+    }
+
+    /* Form toggle */
+    .form-toggle {
+      display: flex; gap: 8px; margin-bottom: 24px;
+    }
+
+    .toggle-btn {
+      flex: 1; padding: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--white); border-radius: var(--radius);
+      font-size: 13px; font-weight: 600; color: var(--gray-400);
+      cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+
+    .toggle-btn.active {
+      border-color: var(--navy); background: var(--navy);
+      color: var(--white);
+    }
+
+    /* Form fields */
+    .form-group { margin-bottom: 16px; }
+
+    .form-label {
+      display: block; margin-bottom: 6px;
+      font-size: 12px; font-weight: 600;
+      color: var(--navy); letter-spacing: 0.3px;
+    }
+
+    .form-control {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px; font-family: inherit;
+      color: var(--navy); background: var(--white);
+      outline: none; transition: all 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--navy);
+      box-shadow: 0 0 0 3px rgba(13,27,42,0.08);
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .input-wrap { position: relative; }
+    .input-wrap .input-icon {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--gray-400); font-size: 16px; cursor: pointer;
+    }
+    .input-wrap input { padding-right: 40px; }
+
+    .submit-btn {
+      width: 100%; padding: 13px;
+      background: var(--navy); color: var(--white);
+      border: none; border-radius: var(--radius);
+      font-size: 15px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover {
+      background: #1b2d42;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(13,27,42,0.3);
+    }
+
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .domain-note {
+      background: #fffbeb; border: 1px solid #fde68a;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 12px; color: #b45309;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+    }
+
+    .error-msg {
+      background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; color: #b91c1c;
+      margin-bottom: 16px; display: none;
+    }
+
+    .success-msg {
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 8px; padding: 12px 16px;
+      font-size: 13px; color: #15803d;
+      margin-bottom: 16px; display: none;
+    }
+
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
+    .toast {
+      background: var(--navy); color: var(--white);
+      padding: 14px 20px; border-radius: var(--radius);
+      font-size: 14px; box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+      animation: slideIn 0.3s ease; border-left: 4px solid var(--amber);
+      min-width: 280px;
+    }
+    .toast.success { border-left-color: #22c55e; }
+    .toast.error   { border-left-color: #ef4444; }
+
+    @keyframes slideIn { from { transform: translateX(100%); opacity:0; } to { transform:translateX(0);opacity:1; } }
+
+    @media (max-width: 900px) {
+      .left-panel { display: none; }
+      .right-panel { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LEFT HERO PANEL -->
+<div class="left-panel">
+  <div class="brand">
+    <div class="brand-logo">🎓</div>
+    <h1>Campus Placement<br/>Management System</h1>
+    <p>Powered by Spring Boot & MySQL</p>
+  </div>
+
+  <div class="hero-content">
+    <h2>Your Career<br/>Starts <span>Here</span></h2>
+    <p>A comprehensive platform connecting students with top companies through a streamlined, intelligent placement process managed by your TPO.</p>
+  </div>
+
+  <div class="features">
+    <div class="feature-chip"><div class="icon">👨‍🎓</div> Student Portal</div>
+    <div class="feature-chip"><div class="icon">🏢</div> Company HR</div>
+    <div class="feature-chip"><div class="icon">🎯</div> TPO Admin</div>
+  </div>
+</div>
+
+<!-- RIGHT AUTH PANEL -->
+<div class="right-panel">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h3 id="auth-title">Welcome Back</h3>
+      <p id="auth-subtitle">Sign in to access your placement dashboard</p>
+    </div>
+
+    <!-- Role Selector -->
+    <div class="role-tabs">
+      <button class="role-tab active" data-role="STUDENT">👨‍🎓 Student</button>
+      <button class="role-tab" data-role="COMPANY">🏢 Company</button>
+      <button class="role-tab" data-role="TPO">🎯 TPO</button>
+    </div>
+
+    <!-- Login / Register Toggle -->
+    <div class="form-toggle" id="form-toggle-wrap">
+      <button class="toggle-btn active" id="btn-login">Sign In</button>
+      <button class="toggle-btn" id="btn-register">Register</button>
+    </div>
+
+    <!-- Messages -->
+    <div class="error-msg"   id="error-msg">❌ <span id="error-text"></span></div>
+    <div class="success-msg" id="success-msg">✅ <span id="success-text"></span></div>
+
+    <!-- College domain note (shown for student register) -->
+    <div class="domain-note" id="domain-note" style="display:none;">
+      ⚠️ Student email must end with <strong>@college.edu</strong>
+    </div>
+
+    <!-- ===== LOGIN FORM ===== -->
+    <form id="login-form">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="login-email" placeholder="your@email.com" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <input type="password" class="form-control" id="login-password" placeholder="Enter password" required/>
+          <span class="input-icon" id="toggle-pw">👁️</span>
+        </div>
+      </div>
+      <button type="submit" class="submit-btn" id="login-btn">🔐 Sign In</button>
+    </form>
+
+    <!-- ===== REGISTER FORMS ===== -->
+
+    <!-- Student Register -->
+    <form id="register-student-form" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-control" id="s-name" placeholder="Rahul Kumar" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" class="form-control" id="s-phone" placeholder="9876543210"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">College Email</label>
+        <input type="email" class="form-control" id="s-email" placeholder="rahul@college.edu" required/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Branch</label>
+          <select class="form-control" id="s-branch">
+            <option value="">Select Branch</option>
+            <option>CSE</option><option>ECE</option><option>IT</option>
+            <option>ME</option><option>CE</option><option>EEE</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CGPA</label>
+          <input type="number" class="form-control" id="s-cgpa" placeholder="8.5" min="0" max="10" step="0.01"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Graduation Year</label>
+          <input type="number" class="form-control" id="s-gradyear" placeholder="2025" min="2020" max="2030"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="s-password" placeholder="Min 6 chars" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Skills (comma-separated)</label>
+        <input type="text" class="form-control" id="s-skills" placeholder="Java, Python, SQL, React"/>
+      </div>
+      <button type="submit" class="submit-btn">📝 Register as Student</button>
+    </form>
+
+    <!-- Company Register -->
+    <form id="register-company-form" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Company Name</label>
+          <input type="text" class="form-control" id="c-name" placeholder="TechCorp Ltd." required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">HR Name</label>
+          <input type="text" class="form-control" id="c-hrname" placeholder="Priya Sharma"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company Email</label>
+        <input type="email" class="form-control" id="c-email" placeholder="hr@company.com" required/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Industry</label>
+          <select class="form-control" id="c-industry">
+            <option value="">Select Industry</option>
+            <option>Information Technology</option><option>Finance</option>
+            <option>Manufacturing</option><option>Consulting</option>
+            <option>E-Commerce</option><option>Healthcare</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input type="text" class="form-control" id="c-location" placeholder="Bangalore"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Website</label>
+        <input type="url" class="form-control" id="c-website" placeholder="https://company.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" id="c-password" placeholder="Min 6 chars" required/>
+      </div>
+      <button type="submit" class="submit-btn">🏢 Register Company</button>
+    </form>
+
+    <!-- TPO Register -->
+    <form id="register-tpo-form" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-control" id="t-name" placeholder="Dr. Rajesh Kumar" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" class="form-control" id="t-phone" placeholder="9876543210"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="t-email" placeholder="tpo@college.edu" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Designation</label>
+        <input type="text" class="form-control" id="t-designation" placeholder="Training & Placement Officer"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" id="t-password" placeholder="Min 6 chars" required/>
+      </div>
+      <button type="submit" class="submit-btn">🎯 Register as TPO</button>
+    </form>
+
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+  const API = 'http://localhost:8080/api';
+  let currentRole = 'STUDENT';
+  let currentMode = 'login'; // 'login' | 'register'
+
+  // ===== ROLE TABS =====
+  document.querySelectorAll('.role-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentRole = tab.dataset.role;
+      updateUI();
+    });
+  });
+
+  // ===== FORM TOGGLE =====
+  document.getElementById('btn-login').addEventListener('click', () => {
+    currentMode = 'login'; updateUI();
+  });
+  document.getElementById('btn-register').addEventListener('click', () => {
+    currentMode = 'register'; updateUI();
+  });
+
+  function updateUI() {
+    clearMessages();
+    const isLogin = currentMode === 'login';
+
+    // Update header
+    document.getElementById('auth-title').textContent = isLogin ? 'Welcome Back' : 'Create Account';
+    document.getElementById('auth-subtitle').textContent = isLogin
+      ? `Sign in as ${currentRole.charAt(0) + currentRole.slice(1).toLowerCase()}`
+      : `Register as ${currentRole.charAt(0) + currentRole.slice(1).toLowerCase()}`;
+
+    // Toggle btn states
+    document.getElementById('btn-login').classList.toggle('active', isLogin);
+    document.getElementById('btn-register').classList.toggle('active', !isLogin);
+
+    // Show correct form
+    const forms = ['login-form','register-student-form','register-company-form','register-tpo-form'];
+    forms.forEach(f => document.getElementById(f).style.display = 'none');
+
+    if (isLogin) {
+      document.getElementById('login-form').style.display = 'block';
+    } else {
+      const map = { STUDENT: 'register-student-form', COMPANY: 'register-company-form', TPO: 'register-tpo-form' };
+      document.getElementById(map[currentRole]).style.display = 'block';
+    }
+
+    // Domain note for student register
+    document.getElementById('domain-note').style.display =
+      (!isLogin && currentRole === 'STUDENT') ? 'flex' : 'none';
+  }
+
+  // ===== PASSWORD TOGGLE =====
+  document.getElementById('toggle-pw').addEventListener('click', () => {
+    const pw = document.getElementById('login-password');
+    pw.type = pw.type === 'password' ? 'text' : 'password';
+  });
+
+  // ===== LOGIN =====
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true; btn.textContent = 'Signing in...';
+    clearMessages();
+
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: document.getElementById('login-email').value,
+          password: document.getElementById('login-password').value,
+          role: currentRole
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+
+      // Save session
+      localStorage.setItem('cpms_token',  data.token);
+      localStorage.setItem('cpms_role',   data.role);
+      localStorage.setItem('cpms_userId', data.userId);
+      localStorage.setItem('cpms_name',   data.name);
+      localStorage.setItem('cpms_email',  data.email || '');
+
+      showSuccess('Login successful! Redirecting...');
+      toast('Welcome back, ' + data.name + '! 🎉', 'success');
+
+      // Redirect based on role
+      setTimeout(() => {
+        const routes = {
+          STUDENT: 'pages/student-dashboard.html',
+          COMPANY: 'pages/company-dashboard.html',
+          TPO:     'pages/tpo-dashboard.html'
+        };
+        window.location.href = routes[data.role];
+      }, 1200);
+
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '🔐 Sign In';
+    }
+  });
+
+  // ===== REGISTER STUDENT =====
+  document.getElementById('register-student-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true; btn.textContent = 'Registering...';
+    clearMessages();
+
+    try {
+      const res = await fetch(`${API}/auth/register/student`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: document.getElementById('s-name').value,
+          email: document.getElementById('s-email').value,
+          password: document.getElementById('s-password').value,
+          branch: document.getElementById('s-branch').value,
+          cgpa: parseFloat(document.getElementById('s-cgpa').value) || null,
+          phone: document.getElementById('s-phone').value,
+          skills: document.getElementById('s-skills').value,
+          graduationYear: parseInt(document.getElementById('s-gradyear').value) || null
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      showSuccess('Registration successful! Awaiting TPO approval. You will be notified soon.');
+      e.target.reset();
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '📝 Register as Student';
+    }
+  });
+
+  // ===== REGISTER COMPANY =====
+  document.getElementById('register-company-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true; btn.textContent = 'Registering...';
+    clearMessages();
+
+    try {
+      const res = await fetch(`${API}/auth/register/company`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: document.getElementById('c-name').value,
+          email: document.getElementById('c-email').value,
+          password: document.getElementById('c-password').value,
+          industry: document.getElementById('c-industry').value,
+          website: document.getElementById('c-website').value,
+          hrName: document.getElementById('c-hrname').value,
+          location: document.getElementById('c-location').value
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      showSuccess('Company registered! Awaiting TPO approval before you can post jobs.');
+      e.target.reset();
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '🏢 Register Company';
+    }
+  });
+
+  // ===== REGISTER TPO =====
+  document.getElementById('register-tpo-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true; btn.textContent = 'Registering...';
+    clearMessages();
+
+    try {
+      const res = await fetch(`${API}/auth/register/tpo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: document.getElementById('t-name').value,
+          email: document.getElementById('t-email').value,
+          password: document.getElementById('t-password').value,
+          phone: document.getElementById('t-phone').value,
+          designation: document.getElementById('t-designation').value
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      showSuccess('TPO account created! You can now login.');
+      e.target.reset();
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '🎯 Register as TPO';
+    }
+  });
+
+  // ===== HELPERS =====
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    document.getElementById('error-text').textContent = msg;
+    el.style.display = 'flex';
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('success-msg');
+    document.getElementById('success-text').textContent = msg;
+    el.style.display = 'flex';
+  }
+
+  function clearMessages() {
+    document.getElementById('error-msg').style.display = 'none';
+    document.getElementById('success-msg').style.display = 'none';
+  }
+
+  function toast(msg, type = 'info') {
+    const div = document.createElement('div');
+    div.className = `toast ${type}`;
+    div.textContent = msg;
+    document.getElementById('toast-container').appendChild(div);
+    setTimeout(() => div.remove(), 4000);
+  }
+
+  // Redirect if already logged in
+  const existingRole = localStorage.getItem('cpms_role');
+  if (existingRole && localStorage.getItem('cpms_token')) {
+    const routes = {
+      STUDENT: 'pages/student-dashboard.html',
+      COMPANY: 'pages/company-dashboard.html',
+      TPO:     'pages/tpo-dashboard.html'
+    };
+    if (routes[existingRole]) window.location.href = routes[existingRole];
+  }
+</script>
+</body>
+</html>
