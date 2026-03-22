@@ -101,7 +101,7 @@
 
 				<configuration>
 					<!-- ✅ This fixes Railway error -->
-					<mainClass>com.uttam.placement_system.PlacementSystemApplication</mainClass>
+					<mainClass>com.uttam.placement.PlacementSystemApplication</mainClass>
 
 					<excludes>
 						<exclude>
@@ -117,4 +117,3 @@
 	</build>
 
 </project>
-
