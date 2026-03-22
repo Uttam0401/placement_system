@@ -1,0 +1,8 @@
+[build]
+builder = "nixpacks"
+buildCommand = "cd backend && ./mvnw clean package -DskipTests"
+
+[deploy]
+startCommand = "java -jar backend/target/placement-system-1.0.0.jar"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
