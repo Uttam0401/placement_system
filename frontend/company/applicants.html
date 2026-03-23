@@ -179,7 +179,7 @@
               <button class="btn btn-success btn-sm" onclick="quick(${a.id},'SHORTLISTED')">⭐</button>
               <button class="btn btn-danger  btn-sm" onclick="quick(${a.id},'REJECTED')">✕</button>
               <button class="btn btn-outline btn-sm" onclick="openFb(${a.id},'${a.student?.name||''}')">✏️</button>
-              ${a.student?.resumeUrl?`<a href="http://localhost:8080${a.student.resumeUrl}" target="_blank" class="btn btn-outline btn-sm">📄</a>`:''}
+              ${a.student?.resumeUrl?`<a href="https://placementsystem-production.up.railway.app${a.student.resumeUrl}" target="_blank" class="btn btn-outline btn-sm">📄</a>`:''}
             </div>
           </td>
         </tr>`;

@@ -147,7 +147,7 @@
         document.getElementById('f-linkedin').value      = p.linkedinUrl||'';
         document.getElementById('f-skills').value        = p.skills||'';
         if (p.resumeUrl) document.getElementById('resume-status').innerHTML =
-          `<span style="color:#22c55e;">✅ Uploaded</span> — <a href="http://localhost:8080${p.resumeUrl}" target="_blank" style="color:#0d1b2a;font-weight:600;font-size:12px;">View Resume →</a>`;
+          `<span style="color:#22c55e;">✅ Uploaded</span> — <a href="https://placementsystem-production.up.railway.app${p.resumeUrl}" target="_blank" style="color:#0d1b2a;font-weight:600;font-size:12px;">View Resume →</a>`;
         renderSkills();
       } catch(e) { Toast.show('Failed to load profile', 'error'); }
     }

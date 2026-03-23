@@ -103,7 +103,7 @@
           <td>
             <div style="display:flex;gap:5px;">
               ${curTab==='SHORTLISTED'?`<button class="btn btn-success btn-sm" onclick="mark(${a.id},'PLACED')">🏆 Place</button>`:''}
-              ${a.student?.resumeUrl?`<a href="http://localhost:8080${a.student.resumeUrl}" target="_blank" class="btn btn-outline btn-sm">📄</a>`:''}
+              ${a.student?.resumeUrl?`<a href="https://placementsystem-production.up.railway.app${a.student.resumeUrl}" target="_blank" class="btn btn-outline btn-sm">📄</a>`:''}
             </div>
           </td>
         </tr>`).join('');

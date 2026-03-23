@@ -2,7 +2,7 @@
 // Campus Placement Management System — Shared Utilities
 // ============================================================
 
-const API = 'http://localhost:8080/api';
+const API = 'https://placementsystem-production.up.railway.app/api';
 
 // ===== AUTH =====
 const Auth = {

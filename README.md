@@ -107,9 +107,9 @@ cd backend
 mvn spring-boot:run
 ```
 
-API will start at **http://localhost:8080**
+API will start at **https://placementsystem-production.up.railway.app**
 
-Health check: `GET http://localhost:8080/api/auth/health`
+Health check: `GET https://placementsystem-production.up.railway.app/api/auth/health`
 
 ### 4. Run Frontend
 
