@@ -16,7 +16,7 @@
     <groupId>com.uttam</groupId>
     <artifactId>placement-system</artifactId>
     <version>1.0.0</version>
-    <n>placement-system</n>
+    <name>placement-system</name>
     <description>Campus Placement Management System</description>
 
     <properties>
