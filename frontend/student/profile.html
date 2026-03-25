@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>My Profile – CPMS</title>
@@ -33,14 +33,23 @@
             <div class="topbar-right"><button class="topbar-btn" id="sidebar-toggle">☰</button></div>
         </div>
         <div class="page">
-            <div style="display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start;">
+            <div style="display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start;" class="profile-grid">
 
                 <!-- Left -->
                 <div>
                     <div class="card" style="text-align:center;padding:28px 20px;">
-                        <div id="p-avatar" style="width:84px;height:84px;background:linear-gradient(135deg,#0d1b2a,#f59e0b);
-               border-radius:50%;display:flex;align-items:center;justify-content:center;
-               font-size:34px;font-weight:800;color:#fff;margin:0 auto 14px;">S</div>
+                        <div style="position:relative;display:inline-block;margin-bottom:14px;">
+                            <div id="p-avatar" style="width:96px;height:96px;background:linear-gradient(135deg,#0d1b2a,#f59e0b);
+                               border-radius:50%;display:flex;align-items:center;justify-content:center;
+                               font-size:34px;font-weight:800;color:#fff;overflow:hidden;">S</div>
+                            <label for="photo-input" style="position:absolute;bottom:0;right:0;width:30px;height:30px;
+                               background:#0d1b2a;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                               cursor:pointer;font-size:14px;border:2px solid #fff;transition:all .2s;"
+                                   title="Change profile photo" onmouseover="this.style.background='#f59e0b'"
+                                   onmouseout="this.style.background='#0d1b2a'">📷
+                                <input type="file" id="photo-input" accept="image/*" style="display:none;"/>
+                            </label>
+                        </div>
                         <h3 id="p-name" style="font-size:18px;margin-bottom:4px;">Loading…</h3>
                         <p id="p-email" style="font-size:13px;color:#94a3b8;margin-bottom:14px;"></p>
                         <div id="p-status" style="margin-bottom:18px;"></div>
@@ -128,10 +137,19 @@
     if (!Auth.require('STUDENT')) throw 0;
     setupSidebar('Student');
 
+    // Wire photo upload
+    PhotoUpload.setup({
+      inputId: 'photo-input',
+      avatarId: 'p-avatar',
+      endpoint: '/student/photo',
+      onSuccess: () => loadProfile()
+    });
+
     async function loadProfile() {
       try {
         const p = await Api.get('/student/profile');
-        document.getElementById('p-avatar').textContent  = UI.initials(p.name);
+        PhotoUpload.renderAvatar(document.getElementById('p-avatar'), p.name, p.photoUrl||null);
+        PhotoUpload.renderAvatar(document.getElementById('s-avatar'), p.name, p.photoUrl||null);
         document.getElementById('p-name').textContent    = p.name||'Student';
         document.getElementById('p-email').textContent   = p.email||'';
         document.getElementById('p-status').innerHTML    = UI.badge(p.approvalStatus);

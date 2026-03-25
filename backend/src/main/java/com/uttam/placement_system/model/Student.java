@@ -40,6 +40,9 @@ public class Student {
     @Column(name = "resume_url")
     private String resumeUrl;
 
+    @Column(name = "photo_url")
+    private String photoUrl;
+
     @Column(name = "linkedin_url")
     private String linkedinUrl;
 

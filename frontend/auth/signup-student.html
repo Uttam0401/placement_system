@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
+    <script>document.documentElement.setAttribute("data-theme",localStorage.getItem("ps_theme")||"light");</script>
     <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Student Registration – CPMS</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
@@ -16,8 +17,6 @@
                            font-size:26px;margin:0 auto 16px}
         .card-header h2{font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px}
         .card-header p{font-size:14px;color:var(--gray-400)}
-        .domain-note{background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:10px 14px;
-                     font-size:13px;color:#b45309;display:flex;align-items:center;gap:8px;margin-bottom:20px}
         .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
         .form-group{margin-bottom:16px}
         .form-label{display:block;margin-bottom:7px;font-size:12px;font-weight:600;color:var(--navy);letter-spacing:.3px}
@@ -34,7 +33,32 @@
         .msg{padding:12px 16px;border-radius:9px;font-size:13px;font-weight:500;margin-bottom:16px;display:none}
         .msg.error  {background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
         .msg.success{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+        .info-note{background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:10px 14px;
+                   font-size:13px;color:#1d4ed8;display:flex;align-items:center;gap:8px;margin-bottom:20px}
         @media(max-width:600px){.form-row{grid-template-columns:1fr}}
+
+        /* dark mode */
+        [data-theme="dark"] body{background:#111827}
+        [data-theme="dark"] .left{background:#0f172a}
+        [data-theme="dark"] .right{background:#1f2937}
+        [data-theme="dark"] .auth-box h3{color:#e2e8f0}
+        [data-theme="dark"] .form-control{background:#111827;border-color:#374151;color:#e2e8f0}
+        [data-theme="dark"] .form-control:focus{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+        [data-theme="dark"] .role-tabs{background:#374151}
+        [data-theme="dark"] .role-tab{color:#94a3b8}
+        [data-theme="dark"] .role-tab.active{background:#0f172a;color:#f59e0b}
+        [data-theme="dark"] .switch-link{color:#94a3b8}
+        [data-theme="dark"] .switch-link a{color:#f59e0b}
+        [data-theme="dark"] .sub{color:#6b7280}
+        [data-theme="dark"] .msg.error{background:#450a0a;color:#fca5a5;border-color:#991b1b}
+        [data-theme="dark"] .msg.success{background:#052e16;color:#86efac;border-color:#166534}
+
+        /* dark mode toggle */
+        .dm-btn{position:fixed;top:16px;right:16px;width:38px;height:38px;
+                background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+                border-radius:9px;display:flex;align-items:center;justify-content:center;
+                cursor:pointer;font-size:17px;z-index:999;transition:all .2s}
+        .dm-btn:hover{background:rgba(255,255,255,.18)}
     </style>
 </head>
 <body>
@@ -45,7 +69,8 @@
         <p>Create your account to access campus placements</p>
     </div>
 
-    <div class="domain-note">⚠️ Your email must end with <strong>&nbsp;@college.edu</strong></div>
+    <!-- Removed old @saitm.ac.in warning, replaced with helpful info note -->
+    <div class="info-note">📧 An OTP will be sent to your college email for verification</div>
 
     <div class="msg error"   id="err-msg"></div>
     <div class="msg success" id="ok-msg"></div>
@@ -63,7 +88,7 @@
         </div>
         <div class="form-group">
             <label class="form-label">College Email *</label>
-            <input class="form-control" id="email" type="email" placeholder="rahul@college.edu" required/>
+            <input class="form-control" id="email" type="email" placeholder="rahul@saitm.ac.in" required/>
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -107,40 +132,53 @@
     const API = 'https://placementsystem-production.up.railway.app/api';
 
     document.getElementById('reg-form').addEventListener('submit', async e => {
-      e.preventDefault();
-      const btn = document.getElementById('submit-btn');
-      btn.disabled = true; btn.textContent = 'Registering…';
-      document.getElementById('err-msg').style.display = 'none';
-      document.getElementById('ok-msg').style.display  = 'none';
+        e.preventDefault();
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Registering…';
+        document.getElementById('err-msg').style.display = 'none';
+        document.getElementById('ok-msg').style.display  = 'none';
 
-      try {
-        const res = await fetch(`${API}/auth/register/student`, {
-          method: 'POST', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            name:           document.getElementById('name').value,
-            email:          document.getElementById('email').value,
-            password:       document.getElementById('password').value,
-            phone:          document.getElementById('phone').value,
-            branch:         document.getElementById('branch').value,
-            cgpa:           document.getElementById('cgpa').value || null,
-            graduationYear: document.getElementById('gradYear').value || null,
-            skills:         document.getElementById('skills').value,
-            linkedinUrl:    document.getElementById('linkedin').value
-          })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Registration failed');
+        try {
+            const res = await fetch(`${API}/auth/register/student`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name:           document.getElementById('name').value,
+                    email:          document.getElementById('email').value,
+                    password:       document.getElementById('password').value,
+                    phone:          document.getElementById('phone').value,
+                    branch:         document.getElementById('branch').value,
+                    cgpa:           document.getElementById('cgpa').value || null,
+                    graduationYear: document.getElementById('gradYear').value || null,
+                    skills:         document.getElementById('skills').value,
+                    linkedinUrl:    document.getElementById('linkedin').value
+                })
+            });
 
-        const ok = document.getElementById('ok-msg');
-        ok.textContent = '✅ Registered successfully! Awaiting TPO approval. You can login once approved.';
-        ok.style.display = 'block';
-        e.target.reset();
-      } catch (err) {
-        const el = document.getElementById('err-msg');
-        el.textContent = '❌ ' + err.message; el.style.display = 'block';
-      } finally {
-        btn.disabled = false; btn.textContent = '📝 Create Student Account';
-      }
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Registration failed');
+
+            // ✅ Save email + role to sessionStorage for verify-otp page
+            sessionStorage.setItem('otp_email', document.getElementById('email').value);
+            sessionStorage.setItem('otp_role', 'STUDENT');
+
+            const ok = document.getElementById('ok-msg');
+            ok.textContent = '✅ Registered! Redirecting to OTP verification…';
+            ok.style.display = 'block';
+
+            // ✅ Redirect to OTP verification page after 1.5s
+            setTimeout(() => {
+                window.location.href = 'verify-otp.html';
+            }, 1500);
+
+        } catch (err) {
+            const el = document.getElementById('err-msg');
+            el.textContent = '❌ ' + err.message;
+            el.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = '📝 Create Student Account';
+        }
     });
 </script>
 </body>

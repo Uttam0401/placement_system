@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <script>document.documentElement.setAttribute("data-theme",localStorage.getItem("ps_theme")||"light");</script>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Verify OTP — Campus Placement System</title>
+    <link rel="stylesheet" href="../assets/css/styles.css"/>
+    <style>
+        body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f0f0ff; }
+        .otp-card {
+          background:#fff; border-radius:16px; box-shadow:0 8px 32px rgba(79,70,229,.12);
+          padding:48px 40px; max-width:440px; width:100%; text-align:center;
+        }
+        .otp-icon { font-size:48px; margin-bottom:12px; }
+        .otp-card h2 { color:#1e1b4b; margin-bottom:8px; }
+        .otp-card p  { color:#6b7280; margin-bottom:28px; font-size:14px; }
+        .otp-inputs  { display:flex; gap:12px; justify-content:center; margin-bottom:28px; }
+        .otp-inputs input {
+          width:52px; height:60px; border:2px solid #e0e0e0; border-radius:10px;
+          text-align:center; font-size:24px; font-weight:700; color:#4f46e5;
+          transition:.2s; outline:none;
+        }
+        .otp-inputs input:focus { border-color:#4f46e5; background:#f0f0ff; }
+        .btn-verify {
+          width:100%; padding:14px; background:#4f46e5; color:#fff;
+          border:none; border-radius:8px; font-size:16px; font-weight:600;
+          cursor:pointer; transition:.2s;
+        }
+        .btn-verify:hover { background:#4338ca; }
+        .btn-verify:disabled { background:#a5b4fc; cursor:not-allowed; }
+        .resend-row { margin-top:20px; font-size:13px; color:#6b7280; }
+        .resend-row a { color:#4f46e5; cursor:pointer; font-weight:600; }
+        .resend-row a:hover { text-decoration:underline; }
+        .timer { color:#ef4444; font-weight:600; }
+        .error-msg { color:#ef4444; font-size:13px; margin-top:10px; min-height:18px; }
+        .success-msg { color:#16a34a; font-size:13px; margin-top:10px; min-height:18px; }
+    </style>
+</head>
+<body>
+<div class="otp-card">
+    <div class="otp-icon">📧</div>
+    <h2>Verify Your Email</h2>
+    <p id="sub-text">Enter the 6-digit OTP sent to your email and phone.</p>
+
+    <div class="otp-inputs" id="otp-inputs">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+    </div>
+
+    <button class="btn-verify" id="btn-verify" onclick="verifyOtp()">Verify OTP</button>
+
+    <div class="error-msg"   id="err-msg"></div>
+    <div class="success-msg" id="suc-msg"></div>
+
+    <div class="resend-row">
+        Didn't receive it?
+        <span id="resend-area">
+      Resend in <span class="timer" id="countdown">60</span>s
+    </span>
+    </div>
+</div>
+
+<script src="../assets/js/utils.js"></script>
+<script>
+    const API   = 'https://placementsystem-production.up.railway.app/api';
+    const email = sessionStorage.getItem('otp_email');
+    const role  = sessionStorage.getItem('otp_role') || 'STUDENT';
+
+    if (!email) window.location.href = 'login.html';
+
+    document.getElementById('sub-text').textContent =
+      `Enter the 6-digit OTP sent to ${email}`;
+
+    // ===== OTP INPUT AUTO-ADVANCE =====
+    const inputs = document.querySelectorAll('.otp-inputs input');
+    inputs.forEach((inp, i) => {
+      inp.addEventListener('input', () => {
+        inp.value = inp.value.replace(/\D/g, '');
+        if (inp.value && i < inputs.length - 1) inputs[i + 1].focus();
+      });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) inputs[i - 1].focus();
+      });
+      inp.addEventListener('paste', e => {
+        const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
+        if (paste.length === 6) {
+          inputs.forEach((el, idx) => el.value = paste[idx] || '');
+          inputs[5].focus();
+        }
+        e.preventDefault();
+      });
+    });
+    inputs[0].focus();
+
+    function getOtp() { return [...inputs].map(i => i.value).join(''); }
+
+    // ===== VERIFY =====
+    async function verifyOtp() {
+      const otp = getOtp();
+      if (otp.length < 6) { showErr('Please enter all 6 digits.'); return; }
+      const btn = document.getElementById('btn-verify');
+      btn.disabled = true; btn.textContent = 'Verifying…';
+      clearMsg();
+      try {
+        const res = await fetch(API + '/auth/verify-otp', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ email, otp })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Verification failed');
+        showSuc('✅ Email verified! Redirecting…');
+        sessionStorage.removeItem('otp_email');
+        sessionStorage.removeItem('otp_role');
+        setTimeout(() => window.location.href = 'login.html', 1800);
+      } catch (e) {
+        showErr(e.message);
+        btn.disabled = false; btn.textContent = 'Verify OTP';
+      }
+    }
+
+    // ===== COUNTDOWN + RESEND =====
+    let seconds = 60;
+    const tick = setInterval(() => {
+      seconds--;
+      document.getElementById('countdown').textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(tick);
+        document.getElementById('resend-area').innerHTML =
+          '<a onclick="resendOtp()">Resend OTP</a>';
+      }
+    }, 1000);
+
+    async function resendOtp() {
+      clearMsg();
+      try {
+        const res = await fetch(API + '/auth/resend-otp', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ email, role })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to resend');
+        showSuc('OTP resent! Check your email & phone.');
+        // restart timer
+        seconds = 60;
+        document.getElementById('resend-area').innerHTML =
+          'Resend in <span class="timer" id="countdown">60</span>s';
+        const t2 = setInterval(() => {
+          seconds--;
+          const el = document.getElementById('countdown');
+          if (el) el.textContent = seconds;
+          if (seconds <= 0) {
+            clearInterval(t2);
+            document.getElementById('resend-area').innerHTML =
+              '<a onclick="resendOtp()">Resend OTP</a>';
+          }
+        }, 1000);
+      } catch(e) { showErr(e.message); }
+    }
+
+    function showErr(msg) { document.getElementById('err-msg').textContent = msg; }
+    function showSuc(msg) { document.getElementById('suc-msg').textContent = msg; }
+    function clearMsg()   { showErr(''); showSuc(''); }
+</script>
+</body>
+</html>

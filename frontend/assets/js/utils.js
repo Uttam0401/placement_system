@@ -161,9 +161,36 @@ function setupSidebar(roleLabel) {
     b.addEventListener('click', () => { if (confirm('Logout?')) Auth.logout(); })
   );
 
+  // Mobile sidebar + backdrop
   const tog = document.getElementById('sidebar-toggle');
   const sb  = document.querySelector('.sidebar');
-  if (tog && sb) tog.addEventListener('click', () => sb.classList.toggle('open'));
+  let backdrop = document.getElementById('_sb-backdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = '_sb-backdrop';
+    backdrop.className = 'sidebar-backdrop';
+    document.body.appendChild(backdrop);
+  }
+  const closeSidebar = () => { sb?.classList.remove('open'); backdrop.classList.remove('open'); };
+  if (tog && sb) {
+    tog.addEventListener('click', () => {
+      const isOpen = sb.classList.toggle('open');
+      backdrop.classList.toggle('open', isOpen);
+    });
+    backdrop.addEventListener('click', closeSidebar);
+  }
+
+  // Inject dark mode toggle button into topbar-right if not present
+  const tbr = document.querySelector('.topbar-right');
+  if (tbr && !tbr.querySelector('.dark-toggle')) {
+    const dmBtn = document.createElement('button');
+    dmBtn.className = 'dark-toggle topbar-btn';
+    dmBtn.title = 'Toggle dark mode';
+    dmBtn.style.border = '1px solid var(--border)';
+    tbr.insertBefore(dmBtn, tbr.firstChild);
+    dmBtn.addEventListener('click', () => DarkMode.toggle());
+  }
+  DarkMode._update();
 }
 
 // ===== CHATBOT =====
@@ -214,3 +241,75 @@ function setupChatbot() {
   }
   function fmt(t) { return t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); }
 }
+
+// ===== DARK MODE =====
+const DarkMode = {
+  init() {
+    const saved = localStorage.getItem('ps_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    this._update();
+  },
+  toggle() {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('ps_theme', next);
+    this._update();
+  },
+  _update() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.dark-toggle').forEach(btn => {
+      btn.textContent = isDark ? '☀️' : '🌙';
+      btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+    });
+  }
+};
+// Auto-init
+DarkMode.init();
+
+// ===== PHOTO UPLOAD HELPERS =====
+const PhotoUpload = {
+  // Call this after profile data loads.
+  // avatarEl = element to update (shows img or initials)
+  // name = user's name for fallback initials
+  // photoUrl = URL from server (null if not set)
+  renderAvatar(avatarEl, name, photoUrl) {
+    if (!avatarEl) return;
+    if (photoUrl) {
+      avatarEl.style.backgroundImage = `url(${photoUrl})`;
+      avatarEl.style.backgroundSize = 'cover';
+      avatarEl.style.backgroundPosition = 'center';
+      avatarEl.textContent = '';
+    } else {
+      avatarEl.style.backgroundImage = '';
+      avatarEl.textContent = UI.initials(name);
+    }
+  },
+
+  // Wire up a photo upload zone
+  // opts: { inputId, avatarId, endpoint, onSuccess }
+  setup(opts) {
+    const input = document.getElementById(opts.inputId);
+    if (!input) return;
+    input.addEventListener('change', async () => {
+      const file = input.files[0]; if (!file) return;
+      const allowed = ['image/jpeg','image/png','image/webp','image/gif'];
+      if (!allowed.includes(file.type)) { Toast.show('Only JPG, PNG, WebP images allowed','error'); return; }
+      if (file.size > 3 * 1024 * 1024) { Toast.show('Image must be under 3MB','error'); return; }
+      Toast.show('Uploading photo…', 'info');
+      try {
+        const fd = new FormData(); fd.append('photo', file);
+        const res = await Api.upload(opts.endpoint, fd);
+        const avatarEl = document.getElementById(opts.avatarId);
+        if (avatarEl && res.photoUrl) {
+          PhotoUpload.renderAvatar(avatarEl, Auth.getName(), res.photoUrl);
+          // Also update sidebar avatar
+          const sav = document.getElementById('s-avatar');
+          if (sav) PhotoUpload.renderAvatar(sav, Auth.getName(), res.photoUrl);
+        }
+        Toast.show('Profile photo updated! 🖼️','success');
+        if (opts.onSuccess) opts.onSuccess(res);
+      } catch(e) { Toast.show('Photo upload failed: '+e.message,'error'); }
+    });
+  }
+};

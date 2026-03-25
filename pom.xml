@@ -75,6 +75,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Spring Mail (Gmail SMTP) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -82,7 +88,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Test -->
+        <!-- ✅ Correct Test Dependency -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -92,13 +98,16 @@
     </dependencies>
 
     <build>
+        <!-- Keeping your backend folder structure -->
         <sourceDirectory>backend/src/main/java</sourceDirectory>
         <testSourceDirectory>backend/src/test/java</testSourceDirectory>
+
         <resources>
             <resource>
                 <directory>backend/src/main/resources</directory>
             </resource>
         </resources>
+
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

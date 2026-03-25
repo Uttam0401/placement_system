@@ -75,4 +75,11 @@ public class StudentController {
         try { return ResponseEntity.ok(studentService.getMyApplications(userId(auth))); }
         catch (Exception e) { return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); }
     }
+
+    @PostMapping("/photo")
+    public ResponseEntity<?> uploadPhoto(Authentication auth,
+                                         @RequestParam("photo") MultipartFile photo) {
+        try { return ResponseEntity.ok(studentService.uploadPhoto(userId(auth), photo)); }
+        catch (Exception e) { return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); }
+    }
 }

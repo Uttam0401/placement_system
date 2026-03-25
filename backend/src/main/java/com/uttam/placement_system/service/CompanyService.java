@@ -14,6 +14,8 @@ public class CompanyService {
     @Autowired private CompanyRepository     companyRepo;
     @Autowired private JobRepository         jobRepo;
     @Autowired private ApplicationRepository appRepo;
+    @Autowired private StudentRepository     studentRepo;
+    @Autowired private EmailService          emailService;
 
     // ===== PROFILE =====
     public Company getProfile(Long companyId) {
@@ -41,7 +43,6 @@ public class CompanyService {
 
         String deadlineStr = (String) body.get("applicationDeadline");
         LocalDate deadline = (deadlineStr != null && !deadlineStr.isEmpty()) ? LocalDate.parse(deadlineStr) : null;
-        String statusStr   = (String) body.getOrDefault("status", "ACTIVE");
 
         Job job = Job.builder()
                 .company(company)
@@ -55,10 +56,30 @@ public class CompanyService {
                 .location((String) body.get("location"))
                 .applicationDeadline(deadline)
                 .openings(body.get("openings") != null ? Integer.parseInt(body.get("openings").toString()) : null)
-                .status(Job.JobStatus.valueOf(statusStr))
+                .status(Job.JobStatus.valueOf((String) body.getOrDefault("status", "ACTIVE")))
                 .build();
 
-        return jobRepo.save(job);
+        Job saved = jobRepo.save(job);
+
+        // Notify all approved students about new job
+        notifyStudentsNewJob(saved);
+
+        return saved;
+    }
+
+    private void notifyStudentsNewJob(Job job) {
+        List<Student> students = studentRepo.findByApprovalStatus(Student.ApprovalStatus.APPROVED);
+        String deadlineStr = job.getApplicationDeadline() != null ? job.getApplicationDeadline().toString() : null;
+        for (Student student : students) {
+            emailService.sendNewJobAlert(
+                    student.getEmail(),
+                    student.getName(),
+                    job.getRole(),
+                    job.getCompany().getName(),
+                    job.getCtc(),
+                    deadlineStr
+            );
+        }
     }
 
     public Job updateJob(Long companyId, Long jobId, Map<String, Object> body) {
@@ -66,16 +87,16 @@ public class CompanyService {
         if (!job.getCompany().getId().equals(companyId))
             throw new RuntimeException("You do not own this job");
 
-        if (body.get("role")              != null) job.setRole((String) body.get("role"));
-        if (body.get("description")       != null) job.setDescription((String) body.get("description"));
-        if (body.get("ctc")               != null) job.setCtc((String) body.get("ctc"));
-        if (body.get("jobType")           != null) job.setJobType((String) body.get("jobType"));
-        if (body.get("location")          != null) job.setLocation((String) body.get("location"));
-        if (body.get("requiredSkills")    != null) job.setRequiredSkills((String) body.get("requiredSkills"));
-        if (body.get("eligibleBranches")  != null) job.setEligibleBranches((String) body.get("eligibleBranches"));
-        if (body.get("minimumCgpa")       != null) job.setMinimumCgpa(Double.parseDouble(body.get("minimumCgpa").toString()));
-        if (body.get("openings")          != null) job.setOpenings(Integer.parseInt(body.get("openings").toString()));
-        if (body.get("status")            != null) job.setStatus(Job.JobStatus.valueOf((String) body.get("status")));
+        if (body.get("role")             != null) job.setRole((String) body.get("role"));
+        if (body.get("description")      != null) job.setDescription((String) body.get("description"));
+        if (body.get("ctc")              != null) job.setCtc((String) body.get("ctc"));
+        if (body.get("jobType")          != null) job.setJobType((String) body.get("jobType"));
+        if (body.get("location")         != null) job.setLocation((String) body.get("location"));
+        if (body.get("requiredSkills")   != null) job.setRequiredSkills((String) body.get("requiredSkills"));
+        if (body.get("eligibleBranches") != null) job.setEligibleBranches((String) body.get("eligibleBranches"));
+        if (body.get("minimumCgpa")      != null) job.setMinimumCgpa(Double.parseDouble(body.get("minimumCgpa").toString()));
+        if (body.get("openings")         != null) job.setOpenings(Integer.parseInt(body.get("openings").toString()));
+        if (body.get("status")           != null) job.setStatus(Job.JobStatus.valueOf((String) body.get("status")));
         if (body.get("applicationDeadline") != null) {
             String d = (String) body.get("applicationDeadline");
             job.setApplicationDeadline(d.isEmpty() ? null : LocalDate.parse(d));
@@ -109,13 +130,23 @@ public class CompanyService {
         return appRepo.filterByCompany(companyId, minCgpa, branch != null && branch.isBlank() ? null : branch);
     }
 
+    // ===== APPLICATION STATUS UPDATE + EMAIL NOTIFICATION =====
     public Application updateApplicationStatus(Long companyId, Long appId, String status, String feedback) {
         Application app = appRepo.findById(appId).orElseThrow(() -> new RuntimeException("Application not found"));
         if (!app.getJob().getCompany().getId().equals(companyId))
             throw new RuntimeException("You do not own this application");
+
         app.setStatus(Application.ApplicationStatus.valueOf(status));
         if (feedback != null && !feedback.isBlank()) app.setFeedback(feedback);
-        return appRepo.save(app);
+        Application saved = appRepo.save(app);
+
+        // Notify student of status change
+        Student student    = app.getStudent();
+        String  companyName = app.getJob().getCompany().getName();
+        String  jobRole     = app.getJob().getRole();
+        emailService.sendApplicationStatus(student.getEmail(), student.getName(), jobRole, companyName, status);
+
+        return saved;
     }
 
     // ===== DASHBOARD =====

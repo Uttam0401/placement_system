@@ -46,7 +46,7 @@ public class StudentService {
         if (file.getSize() > 5 * 1024 * 1024)
             throw new RuntimeException("File size must be under 5MB");
 
-        Path dir = Paths.get(uploadDir);
+        Path dir = Paths.get(uploadDir, "resumes");
         Files.createDirectories(dir);
 
         String filename = "student_" + studentId + "_" + System.currentTimeMillis() + ".pdf";
@@ -118,6 +118,32 @@ public class StudentService {
     // ===== MY APPLICATIONS =====
     public List<Application> getMyApplications(Long studentId) {
         return appRepo.findByStudentId(studentId);
+    }
+
+    // ===== UPLOAD PHOTO =====
+    public Map<String, Object> uploadPhoto(Long studentId, MultipartFile photo) throws IOException {
+        Student student = getProfile(studentId);
+
+        String ct = photo.getContentType();
+        if (ct == null || !ct.startsWith("image/"))
+            throw new RuntimeException("Only image files are allowed.");
+        if (photo.getSize() > 3 * 1024 * 1024)
+            throw new RuntimeException("Image must be under 3MB.");
+
+        String ext = photo.getOriginalFilename() != null
+                ? photo.getOriginalFilename().substring(photo.getOriginalFilename().lastIndexOf('.'))
+                : ".jpg";
+        String filename = "photo_" + studentId + "_" + System.currentTimeMillis() + ext;
+
+        Path dir = Paths.get(uploadDir, "photos");
+        Files.createDirectories(dir);
+        Files.copy(photo.getInputStream(), dir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+
+        String photoUrl = "/uploads/photos/" + filename;
+        student.setPhotoUrl(photoUrl);
+        studentRepo.save(student);
+
+        return Map.of("message", "Photo uploaded successfully", "photoUrl", photoUrl);
     }
 
     // ===== DASHBOARD STATS =====

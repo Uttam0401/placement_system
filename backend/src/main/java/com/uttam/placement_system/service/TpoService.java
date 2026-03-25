@@ -15,6 +15,7 @@ public class TpoService {
     @Autowired private JobRepository         jobRepo;
     @Autowired private ApplicationRepository appRepo;
     @Autowired private TpoRepository         tpoRepo;
+    @Autowired private EmailService          emailService;
 
     // ===== STUDENTS =====
     public List<Student> getAllStudents(String status) {
@@ -26,13 +27,19 @@ public class TpoService {
     public Student approveStudent(Long id) {
         Student s = studentRepo.findById(id).orElseThrow(() -> new RuntimeException("Student not found"));
         s.setApprovalStatus(Student.ApprovalStatus.APPROVED);
-        return studentRepo.save(s);
+        studentRepo.save(s);
+        // Notify student
+        emailService.sendAccountApproved(s.getEmail(), s.getName(), "Student");
+        return s;
     }
 
     public Student rejectStudent(Long id) {
         Student s = studentRepo.findById(id).orElseThrow(() -> new RuntimeException("Student not found"));
         s.setApprovalStatus(Student.ApprovalStatus.REJECTED);
-        return studentRepo.save(s);
+        studentRepo.save(s);
+        // Notify student
+        emailService.sendAccountRejected(s.getEmail(), s.getName(), "Student");
+        return s;
     }
 
     public void deleteStudent(Long id) {
@@ -50,13 +57,19 @@ public class TpoService {
     public Company approveCompany(Long id) {
         Company c = companyRepo.findById(id).orElseThrow(() -> new RuntimeException("Company not found"));
         c.setApprovalStatus(Company.ApprovalStatus.APPROVED);
-        return companyRepo.save(c);
+        companyRepo.save(c);
+        // Notify company
+        emailService.sendAccountApproved(c.getEmail(), c.getName(), "Company");
+        return c;
     }
 
     public Company rejectCompany(Long id) {
         Company c = companyRepo.findById(id).orElseThrow(() -> new RuntimeException("Company not found"));
         c.setApprovalStatus(Company.ApprovalStatus.REJECTED);
-        return companyRepo.save(c);
+        companyRepo.save(c);
+        // Notify company
+        emailService.sendAccountRejected(c.getEmail(), c.getName(), "Company");
+        return c;
     }
 
     public void deleteCompany(Long id) {
@@ -87,24 +100,21 @@ public class TpoService {
 
     // ===== ANALYTICS =====
     public Map<String, Object> getAnalytics() {
-        long totalStudents    = studentRepo.count();
-        long pendingStudents  = studentRepo.countPending();
-        long approvedStudents = studentRepo.findByApprovalStatus(Student.ApprovalStatus.APPROVED).size();
-        long totalCompanies   = companyRepo.count();
-        long pendingCompanies = companyRepo.countByApprovalStatus(Company.ApprovalStatus.PENDING);
-        long approvedCompanies= companyRepo.countByApprovalStatus(Company.ApprovalStatus.APPROVED);
-        long activeJobs       = jobRepo.countByStatus(Job.JobStatus.ACTIVE);
-        long totalJobs        = jobRepo.count();
-        long totalApplications= appRepo.count();
-        long placedStudents   = appRepo.countPlacedStudents();
+        long totalStudents     = studentRepo.count();
+        long pendingStudents   = studentRepo.countPending();
+        long approvedStudents  = studentRepo.findByApprovalStatus(Student.ApprovalStatus.APPROVED).size();
+        long totalCompanies    = companyRepo.count();
+        long pendingCompanies  = companyRepo.countByApprovalStatus(Company.ApprovalStatus.PENDING);
+        long approvedCompanies = companyRepo.countByApprovalStatus(Company.ApprovalStatus.APPROVED);
+        long activeJobs        = jobRepo.countByStatus(Job.JobStatus.ACTIVE);
+        long totalJobs         = jobRepo.count();
+        long totalApplications = appRepo.count();
+        long placedStudents    = appRepo.countPlacedStudents();
 
-        // Applications by status
         Map<String, Long> appsByStatus = new LinkedHashMap<>();
-        for (Object[] row : appRepo.countByStatusGrouped()) {
+        for (Object[] row : appRepo.countByStatusGrouped())
             appsByStatus.put(row[0].toString(), (Long) row[1]);
-        }
 
-        // Placed by branch
         Map<String, Long> placedByBranch = new LinkedHashMap<>();
         for (Object[] row : appRepo.countPlacedByBranch()) {
             String branch = row[0] != null ? row[0].toString() : "Unknown";
@@ -112,18 +122,18 @@ public class TpoService {
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("totalStudents",     totalStudents);
-        result.put("pendingStudents",   pendingStudents);
-        result.put("approvedStudents",  approvedStudents);
-        result.put("totalCompanies",    totalCompanies);
-        result.put("pendingCompanies",  pendingCompanies);
-        result.put("approvedCompanies", approvedCompanies);
-        result.put("activeJobs",        activeJobs);
-        result.put("totalJobs",         totalJobs);
-        result.put("totalApplications", totalApplications);
-        result.put("placedStudents",    placedStudents);
+        result.put("totalStudents",        totalStudents);
+        result.put("pendingStudents",      pendingStudents);
+        result.put("approvedStudents",     approvedStudents);
+        result.put("totalCompanies",       totalCompanies);
+        result.put("pendingCompanies",     pendingCompanies);
+        result.put("approvedCompanies",    approvedCompanies);
+        result.put("activeJobs",           activeJobs);
+        result.put("totalJobs",            totalJobs);
+        result.put("totalApplications",    totalApplications);
+        result.put("placedStudents",       placedStudents);
         result.put("applicationsByStatus", appsByStatus);
-        result.put("placedByBranch",    placedByBranch);
+        result.put("placedByBranch",       placedByBranch);
         return result;
     }
 }

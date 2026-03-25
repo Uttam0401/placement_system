@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS tpo_admins (
 CREATE TABLE IF NOT EXISTS students (
     id               BIGINT AUTO_INCREMENT PRIMARY KEY,
     name             VARCHAR(100) NOT NULL,
-    email            VARCHAR(150) NOT NULL UNIQUE COMMENT 'Must end with @college.edu',
+    email            VARCHAR(150) NOT NULL UNIQUE COMMENT 'Must end with @saitm.ac.in',
     password         VARCHAR(255) NOT NULL,
     phone            VARCHAR(20),
     branch           VARCHAR(50)  COMMENT 'CSE, ECE, IT, ME, CE, EEE',
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS applications (
 -- Default TPO  (password: admin123)
 INSERT IGNORE INTO tpo_admins (name, email, password, phone, designation) VALUES
 ('Dr. Uttam Kumar',
- 'tpo@college.edu',
+ 'tpo@saitm.ac.in',
  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LPVyQnLb9Ba',
  '9876543210',
  'Training & Placement Officer');
@@ -200,3 +200,24 @@ FROM companies c WHERE c.email='recruit@finserve.com' LIMIT 1;
 -- SELECT c.name, COUNT(a.id) AS applicants
 -- FROM applications a JOIN jobs j ON a.job_id = j.id JOIN companies c ON j.company_id = c.id
 -- GROUP BY c.name ORDER BY applicants DESC;
+
+-- ============================================================
+-- OTP VERIFICATIONS (added for registration & password reset)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS otp_verifications (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    identifier  VARCHAR(200) NOT NULL  COMMENT 'Email or phone',
+    otp_type    VARCHAR(50)  NOT NULL  COMMENT 'REGISTRATION | PASSWORD_RESET',
+    otp         VARCHAR(10)  NOT NULL,
+    expires_at  DATETIME     NOT NULL,
+    verified    TINYINT(1)   NOT NULL DEFAULT 0,
+    created_at  DATETIME     DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_identifier_type (identifier, otp_type)
+);
+
+-- ============================================================
+-- MIGRATIONS: add photo_url to students (safe, ignored if exists)
+-- ============================================================
+ALTER TABLE students
+    ADD COLUMN IF NOT EXISTS photo_url VARCHAR(500) NULL AFTER resume_url;

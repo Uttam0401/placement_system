@@ -87,7 +87,7 @@ mysql -u root -p < database/schema.sql
 ```
 
 This creates the `placement_system` database with all tables and sample data including:
-- Default TPO: `tpo@college.edu` / `admin123`
+- Default TPO: `tpo@saitm.ac.in` / `admin123`
 - 3 approved companies with sample jobs
 
 ### 2. Backend Configuration
@@ -127,12 +127,12 @@ npx serve .
 
 | Role    | Email                 | Password     |
 |---------|-----------------------|--------------|
-| TPO     | tpo@college.edu       | admin123     |
+| TPO     | tpo@saitm.ac.in       | admin123     |
 | Company | hr@techcorp.com       | company123   |
 | Company | campus@infosys.com    | company123   |
 | Company | recruit@finserve.com  | company123   |
 
-> Students must register with `@college.edu` email and await TPO approval.
+> Students must register with `@saitm.ac.in` email and await TPO approval.
 
 ---
 
@@ -141,7 +141,7 @@ npx serve .
 ### 👨‍🎓 Student
 | Feature | Description |
 |---------|-------------|
-| Register | Email must end with `@college.edu` |
+| Register | Email must end with `@saitm.ac.in` |
 | Browse Jobs | Filter by branch, type, keyword |
 | Eligible Jobs | Auto-filtered by CGPA + branch |
 | Apply | One-click with optional cover letter |
@@ -235,7 +235,7 @@ GET    /api/tpo/applications
 - **JWT** tokens (24h expiry) stored in `localStorage` as `ps_token`
 - **BCrypt** password hashing
 - **Role-based** access via Spring Security (`ROLE_STUDENT`, `ROLE_COMPANY`, `ROLE_TPO`)
-- **College domain validation** — students must register with `@college.edu`
+- **College domain validation** — students must register with `@saitm.ac.in`
 - **Unique constraint** on `(student_id, job_id)` prevents duplicate applications
 - **File upload validation** — PDF only, 5MB max
 

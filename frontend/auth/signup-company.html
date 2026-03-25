@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
+    <script>document.documentElement.setAttribute("data-theme",localStorage.getItem("ps_theme")||"light");</script>
     <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Company Registration – CPMS</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
@@ -32,6 +33,29 @@
         .msg.error  {background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
         .msg.success{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
         @media(max-width:600px){.form-row{grid-template-columns:1fr}}
+
+        /* dark mode */
+        [data-theme="dark"] body{background:#111827}
+        [data-theme="dark"] .left{background:#0f172a}
+        [data-theme="dark"] .right{background:#1f2937}
+        [data-theme="dark"] .auth-box h3{color:#e2e8f0}
+        [data-theme="dark"] .form-control{background:#111827;border-color:#374151;color:#e2e8f0}
+        [data-theme="dark"] .form-control:focus{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+        [data-theme="dark"] .role-tabs{background:#374151}
+        [data-theme="dark"] .role-tab{color:#94a3b8}
+        [data-theme="dark"] .role-tab.active{background:#0f172a;color:#f59e0b}
+        [data-theme="dark"] .switch-link{color:#94a3b8}
+        [data-theme="dark"] .switch-link a{color:#f59e0b}
+        [data-theme="dark"] .sub{color:#6b7280}
+        [data-theme="dark"] .msg.error{background:#450a0a;color:#fca5a5;border-color:#991b1b}
+        [data-theme="dark"] .msg.success{background:#052e16;color:#86efac;border-color:#166534}
+
+        /* dark mode toggle */
+        .dm-btn{position:fixed;top:16px;right:16px;width:38px;height:38px;
+                background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+                border-radius:9px;display:flex;align-items:center;justify-content:center;
+                cursor:pointer;font-size:17px;z-index:999;transition:all .2s}
+        .dm-btn:hover{background:rgba(255,255,255,.18)}
     </style>
 </head>
 <body>
