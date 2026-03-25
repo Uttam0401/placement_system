@@ -101,6 +101,7 @@
       background: #f8fafc;
       display: flex; align-items: center; justify-content: center;
       padding: 40px;
+      overflow-y: auto;
     }
 
     .auth-card {
@@ -203,6 +204,20 @@
 
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
+    /* ✅ Forgot password link */
+    .forgot-link {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--gray-400);
+    }
+    .forgot-link a {
+      color: #4f46e5;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .forgot-link a:hover { text-decoration: underline; }
+
     .domain-note {
       background: #fffbeb; border: 1px solid #fde68a;
       border-radius: 8px; padding: 10px 14px;
@@ -282,7 +297,7 @@
 
   <div class="footer-note">
     <p>© 2026 Campus Placement Management System. All rights reserved.</p>
-    <p>Made with ❤️ for students &amp; recruiters.</p>
+    <p>Built with ❤️ to connect students &amp; recruiters.</p>
   </div>
 </div>
 
@@ -330,6 +345,11 @@
         </div>
       </div>
       <button type="submit" class="submit-btn" id="login-btn">🔐 Sign In</button>
+
+      <!-- ✅ ADDED: Forgot Password link -->
+      <div class="forgot-link">
+        <a href="forgot-password.html">Forgot Password?</a>
+      </div>
     </form>
 
     <!-- ===== REGISTER FORMS ===== -->
@@ -458,7 +478,7 @@
 <script>
   const API = 'https://placementsystem-production.up.railway.app/api';
   let currentRole = 'STUDENT';
-  let currentMode = 'login'; // 'login' | 'register'
+  let currentMode = 'login';
 
   // ===== ROLE TABS =====
   document.querySelectorAll('.role-tab').forEach(tab => {
@@ -482,17 +502,14 @@
     clearMessages();
     const isLogin = currentMode === 'login';
 
-    // Update header
     document.getElementById('auth-title').textContent = isLogin ? 'Welcome Back' : 'Create Account';
     document.getElementById('auth-subtitle').textContent = isLogin
       ? `Sign in as ${currentRole.charAt(0) + currentRole.slice(1).toLowerCase()}`
       : `Register as ${currentRole.charAt(0) + currentRole.slice(1).toLowerCase()}`;
 
-    // Toggle btn states
     document.getElementById('btn-login').classList.toggle('active', isLogin);
     document.getElementById('btn-register').classList.toggle('active', !isLogin);
 
-    // Show correct form
     const forms = ['login-form','register-student-form','register-company-form','register-tpo-form'];
     forms.forEach(f => document.getElementById(f).style.display = 'none');
 
@@ -503,7 +520,6 @@
       document.getElementById(map[currentRole]).style.display = 'block';
     }
 
-    // Domain note for student register
     document.getElementById('domain-note').style.display =
       (!isLogin && currentRole === 'STUDENT') ? 'flex' : 'none';
   }
@@ -517,7 +533,7 @@
   // ===== LOGIN =====
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = e.target.querySelector('button');
+    const btn = document.getElementById('login-btn');
     btn.disabled = true; btn.textContent = 'Signing in...';
     clearMessages();
 
@@ -533,9 +549,8 @@
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
+      if (!res.ok) throw new Error(data.error || data.message || 'Login failed');
 
-      // Save session
       localStorage.setItem('cpms_token',  data.token);
       localStorage.setItem('cpms_role',   data.role);
       localStorage.setItem('cpms_userId', data.userId);
@@ -545,12 +560,12 @@
       showSuccess('Login successful! Redirecting...');
       toast('Welcome back, ' + data.name + '! 🎉', 'success');
 
-      // Redirect based on role
+      // ✅ FIXED: correct redirect paths
       setTimeout(() => {
         const routes = {
-          STUDENT: 'pages/student-dashboard.html',
-          COMPANY: 'pages/company-dashboard.html',
-          TPO:     'pages/tpo-dashboard.html'
+          STUDENT: '../student/dashboard.html',
+          COMPANY: '../company/dashboard.html',
+          TPO:     '../tpo/dashboard.html'
         };
         window.location.href = routes[data.role];
       }, 1200);
@@ -586,9 +601,17 @@
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      if (!res.ok) throw new Error(data.error || data.message || 'Registration failed');
+
       showSuccess('Registration successful! Awaiting TPO approval. You will be notified soon.');
+
+      // Store email for OTP verification
+      sessionStorage.setItem('otp_email', document.getElementById('s-email').value);
+      sessionStorage.setItem('otp_role', 'STUDENT');
+
+      setTimeout(() => window.location.href = 'verify-otp.html', 1500);
       e.target.reset();
+
     } catch (err) {
       showError(err.message);
     } finally {
@@ -619,9 +642,16 @@
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      if (!res.ok) throw new Error(data.error || data.message || 'Registration failed');
+
       showSuccess('Company registered! Awaiting TPO approval before you can post jobs.');
+
+      sessionStorage.setItem('otp_email', document.getElementById('c-email').value);
+      sessionStorage.setItem('otp_role', 'COMPANY');
+
+      setTimeout(() => window.location.href = 'verify-otp.html', 1500);
       e.target.reset();
+
     } catch (err) {
       showError(err.message);
     } finally {
@@ -650,9 +680,16 @@
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      if (!res.ok) throw new Error(data.error || data.message || 'Registration failed');
+
       showSuccess('TPO account created! You can now login.');
+
+      sessionStorage.setItem('otp_email', document.getElementById('t-email').value);
+      sessionStorage.setItem('otp_role', 'TPO');
+
+      setTimeout(() => window.location.href = 'verify-otp.html', 1500);
       e.target.reset();
+
     } catch (err) {
       showError(err.message);
     } finally {
@@ -686,15 +723,23 @@
     setTimeout(() => div.remove(), 4000);
   }
 
-  // Redirect if already logged in
+  // ✅ FIXED: correct redirect paths for already logged in
   const existingRole = localStorage.getItem('cpms_role');
   if (existingRole && localStorage.getItem('cpms_token')) {
     const routes = {
-      STUDENT: 'pages/student-dashboard.html',
-      COMPANY: 'pages/company-dashboard.html',
-      TPO:     'pages/tpo-dashboard.html'
+      STUDENT: '../student/dashboard.html',
+      COMPANY: '../company/dashboard.html',
+      TPO:     '../tpo/dashboard.html'
     };
     if (routes[existingRole]) window.location.href = routes[existingRole];
+  }
+
+  // Pre-fill role from URL param if any
+  const urlParams = new URLSearchParams(window.location.search);
+  const roleParam = urlParams.get('role');
+  if (roleParam) {
+    const tab = document.querySelector(`[data-role="${roleParam}"]`);
+    if (tab) { tab.click(); }
   }
 </script>
 </body>
