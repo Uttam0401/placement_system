@@ -30,9 +30,11 @@ public class OtpVerification {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 
+    @Builder.Default                          // ✅ ADDED
     @Column(nullable = false)
     private boolean verified = false;
 
+    @Builder.Default                          // ✅ ADDED
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
